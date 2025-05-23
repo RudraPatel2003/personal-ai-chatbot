@@ -1,0 +1,21 @@
+services:
+  ollama:
+    container_name: ollama
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama/ollama-data:/root/.ollama
+
+  dotnet:
+    container_name: dotnet 
+    build:
+      context: ./dotnet-service
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "5032:5032"
+    volumes:
+      - ./dotnet-service:/app

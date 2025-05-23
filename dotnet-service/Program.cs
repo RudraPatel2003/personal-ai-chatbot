@@ -1,0 +1,75 @@
+using Carter;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.AI;
+
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenApi();
+builder.Services.AddCarter();
+
+// Add Ollama Service
+string ollamaUri =
+    builder.Configuration.GetValue<string>("OllamaUri")
+    ?? throw new ArgumentException("OllamaUri is not set");
+
+const string ollamaModel = "deepseek-r1:1.5b";
+
+builder.Services.AddSingleton<IChatClient>(serviceProvider => new OllamaChatClient(
+    new Uri(ollamaUri),
+    ollamaModel
+));
+
+// Add Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApiDocument(config =>
+{
+    config.DocumentName = "dotnet-service";
+    config.Title = "dotnet-service v1";
+    config.Version = "v1";
+});
+
+WebApplication app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    _ = app.MapOpenApi();
+    _ = app.UseOpenApi();
+    _ = app.UseSwaggerUi(config =>
+    {
+        config.DocumentTitle = "TodoAPI";
+        config.Path = "/swagger";
+        config.DocumentPath = "/swagger/{documentName}/swagger.json";
+        config.DocExpansion = "list";
+    });
+}
+
+app.UseHttpsRedirection();
+app.MapCarter();
+
+// Global error handler
+app.UseExceptionHandler(errorApp =>
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        IExceptionHandlerFeature? exceptionHandlerFeature =
+            context.Features.Get<IExceptionHandlerFeature>();
+
+        Exception? exception = exceptionHandlerFeature?.Error;
+
+        switch (exception)
+        {
+            case ArgumentException argumentException:
+                await context.Response.WriteAsJsonAsync(new { error = argumentException.Message });
+                break;
+            default:
+                await context.Response.WriteAsJsonAsync(
+                    new { error = "An unexpected error occurred." }
+                );
+                break;
+        }
+    })
+);
+
+app.Run();

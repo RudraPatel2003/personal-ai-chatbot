@@ -11,8 +11,6 @@ done
 
 echo "Pulling Ollama models..."
 ollama pull deepseek-r1:1.5b
-ollama pull deepseek-r1:8b
-ollama pull llama3.1:8b
 
 echo "Ollama server is active!"
 

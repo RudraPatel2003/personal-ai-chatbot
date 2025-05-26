@@ -5,11 +5,7 @@ WORKDIR /app
 
 EXPOSE 3000
 
-RUN corepack enable
-
-COPY package.json pnpm-lock.yaml ./
-
-RUN pnpm install --frozen-lockfile
+RUN npm i -g pnpm
 
 # run in watch mode for development
 FROM base AS development
@@ -20,6 +16,10 @@ CMD ["pnpm", "dev"]
 
 # build for production
 FROM base AS production
+
+COPY package.json pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile
 
 RUN pnpm build
 

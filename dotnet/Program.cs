@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.AI;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
 builder.Services.AddOpenApi();
+
+// Add Carter
 builder.Services.AddCarter();
 
 // Add Ollama Service

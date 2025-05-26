@@ -40,6 +40,7 @@ if (app.Environment.IsDevelopment())
         config.Path = "/swagger";
         config.DocumentPath = "/swagger/{documentName}/swagger.json";
         config.DocExpansion = "list";
+        config.ServerUrl = "/api/dotnet";
     });
 }
 

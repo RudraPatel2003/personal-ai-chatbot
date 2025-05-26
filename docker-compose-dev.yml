@@ -10,12 +10,20 @@ services:
       - ./ollama/ollama-data:/root/.ollama
 
   dotnet:
-    container_name: dotnet 
+    container_name: dotnet
     build:
-      context: ./dotnet-service
+      context: ./dotnet
       dockerfile: Dockerfile
       target: development
     ports:
       - "5032:5032"
     volumes:
-      - ./dotnet-service:/app
+      - ./dotnet:/app
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"

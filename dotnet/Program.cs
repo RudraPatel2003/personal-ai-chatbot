@@ -23,8 +23,8 @@ builder.Services.AddSingleton<IChatClient>(serviceProvider => new OllamaChatClie
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>
 {
-    config.DocumentName = "dotnet-service";
-    config.Title = "dotnet-service v1";
+    config.DocumentName = "dotnet";
+    config.Title = "dotnet v1";
     config.Version = "v1";
 });
 
@@ -58,16 +58,15 @@ app.UseExceptionHandler(errorApp =>
 
         Exception? exception = exceptionHandlerFeature?.Error;
 
-        switch (exception)
+        if (exception is not null)
         {
-            case ArgumentException argumentException:
-                await context.Response.WriteAsJsonAsync(new { error = argumentException.Message });
-                break;
-            default:
-                await context.Response.WriteAsJsonAsync(
-                    new { error = "An unexpected error occurred." }
-                );
-                break;
+            await context.Response.WriteAsJsonAsync(new { error = exception.Message });
+        }
+        else
+        {
+            await context.Response.WriteAsJsonAsync(
+                new { error = "An unexpected error occurred." }
+            );
         }
     })
 );

@@ -1,11 +1,13 @@
 # base commands
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS base
 
-EXPOSE 5032
-
 WORKDIR /app
 
-COPY dotnet-service.csproj ./
+EXPOSE 5032
+
+ENV ASPNETCORE_URLS=http://+:5032
+
+COPY dotnet.csproj ./
 
 RUN dotnet restore
 
@@ -26,4 +28,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS production
 
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "dotnet-service.dll"]
+ENTRYPOINT ["dotnet", "dotnet.dll"]

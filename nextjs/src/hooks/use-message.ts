@@ -14,12 +14,63 @@ type ChatRequest = {
   }[];
 };
 
-export function useMessage() {
+type UseMessageResponse = {
+  messages: Message[];
+  isLoading: boolean;
+  sendMessage: (content: string) => Promise<void>;
+};
+
+async function postMessage(
+  existingMessages: Message[],
+  content: string,
+): Promise<ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>>> {
+  const requestMessages = existingMessages.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
+
+  requestMessages.push({
+    role: "user",
+    content,
+  });
+
+  const request: ChatRequest = {
+    id: Date.now().toString(),
+    messages: requestMessages,
+  };
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/dotnet/messages/actions/chat`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+
+  if (!response.body) {
+    throw new Error("No response body");
+  }
+
+  return response.body.getReader();
+}
+
+export function useMessage(): UseMessageResponse {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const sendMessage = async (content: string): Promise<void> => {
-    if (!content.trim() || isLoading) return;
+    if (!content.trim() || isLoading) {
+      return;
+    }
+
+    setIsLoading(true);
 
     // Add user message
     const userMessage: Message = {
@@ -27,55 +78,32 @@ export function useMessage() {
       role: "user",
       content,
     };
+
     setMessages((previous) => [...previous, userMessage]);
-    setIsLoading(true);
 
     try {
-      // Convert our messages to the format expected by the backend
-      const requestMessages = messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      }));
-
-      // Add the new user message
-      requestMessages.push({
-        role: "user",
-        content,
-      });
-
-      const request: ChatRequest = {
-        id: Date.now().toString(),
-        messages: requestMessages,
-      };
-
-      const response = await fetch(
-        "http://localhost:80/api/dotnet/messages/actions/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(request),
-        },
-      );
-
-      if (!response.ok) throw new Error("Network response was not ok");
-      if (!response.body) throw new Error("No response body");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantMessage = "";
+      const responseBodyReader = await postMessage(messages, content);
 
       // Create assistant message placeholder
+      let assistantMessage = "";
       const assistantMessageId = Date.now().toString();
       setMessages((previous) => [
         ...previous,
-        { id: assistantMessageId, role: "assistant", content: "" },
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          content: assistantMessage,
+        },
       ]);
 
+      const decoder = new TextDecoder();
+
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        const { done, value } = await responseBodyReader.read();
+
+        if (done) {
+          break;
+        }
 
         const chunk = decoder.decode(value);
         assistantMessage += chunk;

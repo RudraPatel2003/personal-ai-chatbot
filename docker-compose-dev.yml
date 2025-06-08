@@ -8,6 +8,12 @@ services:
       - "11434:11434"
     volumes:
       - ./ollama/ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/ollama-ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 50 # it can take a long time to download the model
+      start_period: 60s
 
   dotnet:
     container_name: dotnet
@@ -19,6 +25,17 @@ services:
       - "5032:5032"
     volumes:
       - ./dotnet:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5032/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
+      start_period: 60s
+    depends_on:
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
   nginx:
     container_name: nginx
@@ -27,14 +44,44 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/dotnet/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      dotnet:
+        condition: service_healthy
 
-  frontend:
-    container_name: frontend
+  nextjs:
+    container_name: nextjs
     build:
-      context: ./frontend
+      context: ./nextjs
       dockerfile: Dockerfile
       target: development
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./nextjs:/app
+    depends_on:
+      nginx:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17.5-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chatbot-prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d chatbot-prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

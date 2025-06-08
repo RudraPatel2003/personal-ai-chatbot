@@ -1,11 +1,6 @@
-"use client";
+import { useState } from "react";
 
-import { JSX, useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-
-import { Input } from "@/components/ui/input";
-
-type Message = {
+export type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
@@ -19,39 +14,20 @@ type ChatRequest = {
   }[];
 };
 
-const LoadingSpinner = (): JSX.Element => (
-  <div className="flex items-center gap-2 text-gray-500">
-    <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-500"></div>
-    <span className="text-sm">Thinking...</span>
-  </div>
-);
-
-export default function Home(): JSX.Element {
+export function useMessage() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndReference = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = (): void => {
-    messagesEndReference.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSubmit = async (event: React.FormEvent): Promise<void> => {
-    event.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (content: string): Promise<void> => {
+    if (!content.trim() || isLoading) return;
 
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content,
     };
     setMessages((previous) => [...previous, userMessage]);
-    setInput("");
     setIsLoading(true);
 
     try {
@@ -64,7 +40,7 @@ export default function Home(): JSX.Element {
       // Add the new user message
       requestMessages.push({
         role: "user",
-        content: input,
+        content,
       });
 
       const request: ChatRequest = {
@@ -129,50 +105,9 @@ export default function Home(): JSX.Element {
     }
   };
 
-  return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col p-4">
-      <div className="mb-4 flex-1 space-y-4 overflow-y-auto">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`rounded-lg p-4 ${
-              message.role === "user" ? "ml-auto bg-blue-100" : "bg-gray-100"
-            } max-w-[80%]`}
-          >
-            {message.role === "assistant" ? (
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown>{message.content}</ReactMarkdown>
-              </div>
-            ) : (
-              message.content
-            )}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="max-w-[80%] rounded-lg bg-gray-100 p-4">
-            <LoadingSpinner />
-          </div>
-        )}
-        <div ref={messagesEndReference} />
-      </div>
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <Input
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder="Type your message..."
-          className="flex-1"
-          disabled={isLoading}
-        />
-        <button
-          type="submit"
-          className={`rounded-md bg-blue-500 px-4 py-2 text-white transition-colors ${
-            isLoading ? "cursor-not-allowed opacity-50" : "hover:bg-blue-600"
-          }`}
-          disabled={isLoading}
-        >
-          {isLoading ? "Sending..." : "Send"}
-        </button>
-      </form>
-    </div>
-  );
+  return {
+    messages,
+    isLoading,
+    sendMessage,
+  };
 }

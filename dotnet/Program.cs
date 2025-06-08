@@ -8,6 +8,9 @@ builder.Services.AddOpenApi();
 // Add Carter
 builder.Services.AddCarter();
 
+// Add healthchecks
+builder.Services.AddHealthChecks();
+
 // Add Ollama Service
 string ollamaUri =
     builder.Configuration.GetValue<string>("OllamaUri")
@@ -47,6 +50,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapCarter();
+app.MapHealthChecks("/health");
 
 // Global error handler
 app.UseExceptionHandler(errorApp =>

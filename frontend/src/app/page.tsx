@@ -1,46 +1,47 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { JSX, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
-interface Message {
+import { Input } from "@/components/ui/input";
+
+type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
-}
+};
 
-interface ChatRequest {
+type ChatRequest = {
   id: string;
   messages: {
     role: string;
     content: string;
   }[];
-}
+};
 
-const LoadingSpinner = () => (
+const LoadingSpinner = (): JSX.Element => (
   <div className="flex items-center gap-2 text-gray-500">
-    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+    <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-500"></div>
     <span className="text-sm">Thinking...</span>
   </div>
 );
 
-export default function Home() {
+export default function Home(): JSX.Element {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndReference = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (): void => {
+    messagesEndReference.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent): Promise<void> => {
+    event.preventDefault();
     if (!input.trim() || isLoading) return;
 
     // Add user message
@@ -49,15 +50,15 @@ export default function Home() {
       role: "user",
       content: input,
     };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((previous) => [...previous, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
       // Convert our messages to the format expected by the backend
-      const requestMessages = messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
+      const requestMessages = messages.map((message) => ({
+        role: message.role,
+        content: message.content,
       }));
 
       // Add the new user message
@@ -91,8 +92,8 @@ export default function Home() {
 
       // Create assistant message placeholder
       const assistantMessageId = Date.now().toString();
-      setMessages((prev) => [
-        ...prev,
+      setMessages((previous) => [
+        ...previous,
         { id: assistantMessageId, role: "assistant", content: "" },
       ]);
 
@@ -104,19 +105,19 @@ export default function Home() {
         assistantMessage += chunk;
 
         // Update the assistant's message with the new chunk
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, content: assistantMessage }
-              : msg,
+        setMessages((previous) =>
+          previous.map((message) =>
+            message.id === assistantMessageId
+              ? { ...message, content: assistantMessage }
+              : message,
           ),
         );
       }
     } catch (error) {
       console.error("Error:", error);
 
-      setMessages((prev) => [
-        ...prev,
+      setMessages((previous) => [
+        ...previous,
         {
           id: Date.now().toString(),
           role: "assistant",
@@ -129,17 +130,17 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto p-4">
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+    <div className="mx-auto flex h-screen max-w-3xl flex-col p-4">
+      <div className="mb-4 flex-1 space-y-4 overflow-y-auto">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`p-4 rounded-lg ${
-              message.role === "user" ? "bg-blue-100 ml-auto" : "bg-gray-100"
+            className={`rounded-lg p-4 ${
+              message.role === "user" ? "ml-auto bg-blue-100" : "bg-gray-100"
             } max-w-[80%]`}
           >
             {message.role === "assistant" ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
                 <ReactMarkdown>{message.content}</ReactMarkdown>
               </div>
             ) : (
@@ -148,24 +149,24 @@ export default function Home() {
           </div>
         ))}
         {isLoading && (
-          <div className="p-4 rounded-lg bg-gray-100 max-w-[80%]">
+          <div className="max-w-[80%] rounded-lg bg-gray-100 p-4">
             <LoadingSpinner />
           </div>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndReference} />
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(event) => setInput(event.target.value)}
           placeholder="Type your message..."
           className="flex-1"
           disabled={isLoading}
         />
         <button
           type="submit"
-          className={`px-4 py-2 bg-blue-500 text-white rounded-md transition-colors ${
-            isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+          className={`rounded-md bg-blue-500 px-4 py-2 text-white transition-colors ${
+            isLoading ? "cursor-not-allowed opacity-50" : "hover:bg-blue-600"
           }`}
           disabled={isLoading}
         >

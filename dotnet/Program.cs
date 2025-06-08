@@ -13,7 +13,7 @@ string ollamaUri =
     builder.Configuration.GetValue<string>("OllamaUri")
     ?? throw new ArgumentException("OllamaUri is not set");
 
-const string ollamaModel = "deepseek-r1:1.5b";
+const string ollamaModel = "llama3.2:3b";
 
 builder.Services.AddSingleton<IChatClient>(serviceProvider => new OllamaChatClient(
     new Uri(ollamaUri),

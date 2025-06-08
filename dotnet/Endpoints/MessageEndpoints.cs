@@ -11,6 +11,7 @@ public class MessageEndpoints : ICarterModule
         You provide accurate, thoughtful, and well-structured responses.
         You aim to be clear and concise while being thorough when needed.
         You can help with a wide variety of tasks including answering questions, writing, analysis, math, coding, and creative tasks.
+        Provide your response in markdown format.
         """;
 
     public void AddRoutes(IEndpointRouteBuilder app)

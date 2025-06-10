@@ -1,9 +1,23 @@
 using Carter;
+using Dotnet.Database.Context;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
+
+// Add DbContext
+string connectionString =
+    builder.Configuration.GetConnectionString("LocalAiChatbot")
+    ?? throw new ArgumentException("Connection string is not set");
+
+builder.Services.AddDbContext<ChatbotContext>(options =>
+    options.UseNpgsql(
+        connectionString,
+        postgresOptions => postgresOptions.SetPostgresVersion(new Version(17, 5))
+    )
+);
 
 // Add Carter
 builder.Services.AddCarter();
@@ -34,13 +48,20 @@ builder.Services.AddOpenApiDocument(config =>
 
 WebApplication app = builder.Build();
 
+// Run database migrations
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    ChatbotContext dbContext = scope.ServiceProvider.GetRequiredService<ChatbotContext>();
+    dbContext.Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     _ = app.MapOpenApi();
     _ = app.UseOpenApi();
     _ = app.UseSwaggerUi(config =>
     {
-        config.DocumentTitle = "TodoAPI";
+        config.DocumentTitle = "LocalAiChatbot";
         config.Path = "/swagger";
         config.DocumentPath = "/swagger/{documentName}/swagger.json";
         config.DocExpansion = "list";
@@ -49,6 +70,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Map endpoints
 app.MapCarter();
 app.MapHealthChecks("/health");
 

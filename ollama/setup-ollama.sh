@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# remove /tmp/ollama-ready if it exists
+rm -f /tmp/ollama-ready
+
 echo "Starting Ollama server..."
 ollama serve &
 SERVE_PID=$!
@@ -22,6 +25,7 @@ done
 
 echo "Ollama server is active!"
 
+# indicate that ollama is ready
 touch /tmp/ollama-ready
 
 wait $SERVE_PID

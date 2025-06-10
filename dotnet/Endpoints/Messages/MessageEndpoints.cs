@@ -1,8 +1,8 @@
 using Carter;
-using Dotnet.Models;
+using Dotnet.Endpoints.Messages.Requests;
 using Microsoft.Extensions.AI;
 
-namespace Dotnet.Endpoints;
+namespace Dotnet.Endpoints.Messages;
 
 public class MessageEndpoints : ICarterModule
 {

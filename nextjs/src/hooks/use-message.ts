@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
 export type Message = {
@@ -14,7 +15,7 @@ type ChatRequest = {
   }[];
 };
 
-type UseMessageResponse = {
+type UseMessageHook = {
   messages: Message[];
   isLoading: boolean;
   sendMessage: (content: string) => Promise<void>;
@@ -61,77 +62,75 @@ async function postMessage(
   return response.body.getReader();
 }
 
-export function useMessage(): UseMessageResponse {
+export function useMessage(): UseMessageHook {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = async (content: string): Promise<void> => {
-    if (!content.trim() || isLoading) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content,
-    };
-
-    setMessages((previous) => [...previous, userMessage]);
-
-    try {
-      const responseBodyReader = await postMessage(messages, content);
-
-      // Create assistant message placeholder
-      let assistantMessage = "";
-      const assistantMessageId = Date.now().toString();
-      setMessages((previous) => [
-        ...previous,
-        {
-          id: assistantMessageId,
-          role: "assistant",
-          content: assistantMessage,
-        },
-      ]);
-
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await responseBodyReader.read();
-
-        if (done) {
-          break;
-        }
-
-        const chunk = decoder.decode(value);
-        assistantMessage += chunk;
-
-        // Update the assistant's message with the new chunk
-        setMessages((previous) =>
-          previous.map((message) =>
-            message.id === assistantMessageId
-              ? { ...message, content: assistantMessage }
-              : message,
-          ),
-        );
+  const { mutateAsync: sendMessage, isPending: isLoading } = useMutation({
+    mutationFn: async (content: string) => {
+      if (!content.trim()) {
+        return;
       }
-    } catch (error) {
-      console.error("Error:", error);
 
-      setMessages((previous) => [
-        ...previous,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: "Sorry, there was an error processing your request.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Add user message
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: content.trim(),
+      };
+
+      setMessages((previous) => [...previous, userMessage]);
+
+      try {
+        const responseBodyReader = await postMessage(messages, content);
+
+        // Create assistant message placeholder
+        let assistantMessage = "";
+        const assistantMessageUuid = crypto.randomUUID();
+
+        setMessages((previous) => [
+          ...previous,
+          {
+            id: assistantMessageUuid,
+            role: "assistant",
+            content: assistantMessage,
+          },
+        ]);
+
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await responseBodyReader.read();
+
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value);
+          assistantMessage += chunk;
+
+          // Update the assistant's message with the new chunk
+          setMessages((previous) =>
+            previous.map((message) =>
+              message.id === assistantMessageUuid
+                ? { ...message, content: assistantMessage }
+                : message,
+            ),
+          );
+        }
+      } catch (error) {
+        console.error("Error:", error);
+
+        setMessages((previous) => [
+          ...previous,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: "Sorry, there was an error processing your request.",
+          },
+        ]);
+      }
+    },
+  });
 
   return {
     messages,

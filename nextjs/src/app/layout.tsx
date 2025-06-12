@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { JSX } from "react";
 
+import ReactQueryProvider from "@/providers/react-query-provider";
+
 const roboto = Roboto({
   variable: "--font-roboto",
   weight: ["400", "500", "700"],
@@ -22,7 +24,9 @@ export default function RootLayout({
 }>): JSX.Element {
   return (
     <html lang="en">
-      <body className={`${roboto.variable} antialiased`}>{children}</body>
+      <body className={`${roboto.variable} antialiased`}>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+      </body>
     </html>
   );
 }

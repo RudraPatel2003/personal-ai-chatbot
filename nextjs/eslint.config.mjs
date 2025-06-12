@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import pluginNext from "@next/eslint-plugin-next";
+import pluginQuery from "@tanstack/eslint-plugin-query";
 import eslintPluginImport from "eslint-plugin-import";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
@@ -12,6 +13,7 @@ export default tseslint.config(
   tseslint.configs.stylistic,
   eslintPluginUnicorn.configs.recommended,
   eslintPluginPrettierRecommended,
+  ...pluginQuery.configs["flat/recommended"],
   {
     languageOptions: {
       parserOptions: {

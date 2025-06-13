@@ -16,8 +16,13 @@ function getMessageView(
   message: Message,
   messages: Message[],
   index: number,
+  isLoading: boolean,
 ): JSX.Element {
-  if (message.role === "assistant" && index === messages.length - 1) {
+  if (
+    message.role === "assistant" &&
+    index === messages.length - 1 &&
+    isLoading
+  ) {
     return <TypingMessage content={message.content} />;
   }
 
@@ -48,7 +53,7 @@ export default function MessageList({
               : "bg-gray-100 text-black"
           } max-w-[80%]`}
         >
-          {getMessageView(message, messages, index)}
+          {getMessageView(message, messages, index, isLoading)}
         </div>
       ))}
       {isLoading && <LoadingMessage />}

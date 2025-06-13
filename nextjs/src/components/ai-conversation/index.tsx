@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { JSX, useEffect, useRef, useState } from "react";
 
 import { useConversation } from "@/hooks/use-conversation";
@@ -17,8 +17,12 @@ export default function AiConversation(): JSX.Element {
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation>();
 
-  const { fetchedConversations, isLoadingConversations, createConversation } =
-    useConversation();
+  const {
+    fetchedConversations,
+    isLoadingConversations,
+    createConversation,
+    deleteConversation,
+  } = useConversation();
 
   useEffect(() => {
     if (fetchedConversations) {
@@ -47,11 +51,20 @@ export default function AiConversation(): JSX.Element {
     setSelectedConversation(newConversation);
   };
 
+  const handleDeleteConversation = async (): Promise<void> => {
+    if (!selectedConversation) return;
+    await deleteConversation(selectedConversation.id);
+    setConversations((previous) =>
+      previous.filter((c) => c.id !== selectedConversation.id),
+    );
+    setSelectedConversation(undefined);
+  };
+
   return (
     <div className="mx-auto flex h-screen max-w-3xl flex-col p-4">
       <h1 className="mb-6 text-center text-2xl font-bold">Local AI Chatbot</h1>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         {isLoadingConversations ? (
           <div className="flex items-center justify-center">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -64,12 +77,26 @@ export default function AiConversation(): JSX.Element {
           />
         )}
 
-        <Button
-          onClick={handleNewConversation}
-          className="rounded bg-slate-600 px-4 py-2 text-white hover:bg-slate-700"
-        >
-          New Conversation
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleNewConversation}
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          {selectedConversation && (
+            <Button
+              onClick={handleDeleteConversation}
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 text-red-500 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {selectedConversation ? (

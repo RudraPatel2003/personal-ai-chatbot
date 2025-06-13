@@ -1,5 +1,12 @@
-import { ChangeEvent, Dispatch, JSX, SetStateAction } from "react";
+import { Dispatch, JSX, SetStateAction } from "react";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Conversation } from "@/types";
 
 type ConversationSelectorProperties = {
@@ -13,25 +20,24 @@ export default function ConversationSelector({
   selectedConversation,
   setSelectedConversation,
 }: ConversationSelectorProperties): JSX.Element {
-  const handleSelectConversation = (
-    event: ChangeEvent<HTMLSelectElement>,
-  ): void => {
-    const conversation = conversations.find((c) => c.id === event.target.value);
-    setSelectedConversation(conversation);
-  };
-
   return (
-    <select
-      className="rounded border p-2"
-      value={selectedConversation?.id || ""}
-      onChange={handleSelectConversation}
+    <Select
+      value={selectedConversation?.id}
+      onValueChange={(value) => {
+        const conversation = conversations.find((c) => c.id === value);
+        setSelectedConversation(conversation);
+      }}
     >
-      <option value="">Select a conversation</option>
-      {conversations.map((conversation) => (
-        <option key={conversation.id} value={conversation.id}>
-          {conversation.id}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger className="w-[200px]">
+        <SelectValue placeholder="Select a conversation" />
+      </SelectTrigger>
+      <SelectContent>
+        {conversations.map((conversation) => (
+          <SelectItem key={conversation.id} value={conversation.id}>
+            {conversation.id}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

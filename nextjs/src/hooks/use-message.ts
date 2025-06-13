@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { messagesApi } from "@/lib/api/messages";
 import { Conversation, Message } from "@/types";
@@ -16,11 +16,13 @@ export function useMessage(
   conversation: Conversation | undefined,
   setConversations: Dispatch<SetStateAction<Conversation[]>>,
 ): UseMessageHook {
-  const [messages, setMessages] = useState<Message[]>(
-    conversation?.messages ?? [],
-  );
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const { addMessage } = useConversation();
+
+  useEffect(() => {
+    setMessages(conversation?.messages ?? []);
+  }, [conversation]);
 
   const { mutateAsync: sendMessage, isPending: isLoading } = useMutation({
     mutationFn: async (content: string) => {

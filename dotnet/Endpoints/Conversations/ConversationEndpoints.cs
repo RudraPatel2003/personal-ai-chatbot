@@ -16,7 +16,7 @@ public class ConversationEndpoints : ICarterModule
         _ = conversationsGroup.MapGet("/", GetAllConversations);
         _ = conversationsGroup.MapGet("/{id:guid}", GetConversationById);
         _ = conversationsGroup.MapPost("/", CreateConversation);
-        _ = conversationsGroup.MapPut("/{id:guid}", UpdateConversation);
+        _ = conversationsGroup.MapPost("/{id:guid}/messages", AddMessage);
         _ = conversationsGroup.MapDelete("/{id:guid}", DeleteConversation);
     }
 
@@ -42,12 +42,9 @@ public class ConversationEndpoints : ICarterModule
         return conversation is null ? TypedResults.NotFound() : TypedResults.Ok(conversation);
     }
 
-    private static async Task<Created<Conversation>> CreateConversation(
-        CreateConversationRequest request,
-        ChatbotContext dbContext
-    )
+    private static async Task<Created<Conversation>> CreateConversation(ChatbotContext dbContext)
     {
-        Conversation conversation = new() { Name = request.Name, Messages = [] };
+        Conversation conversation = new() { Messages = [] };
 
         _ = dbContext.Conversations.Add(conversation);
         _ = await dbContext.SaveChangesAsync();
@@ -55,23 +52,33 @@ public class ConversationEndpoints : ICarterModule
         return TypedResults.Created($"/conversations/{conversation.Id}", conversation);
     }
 
-    private static async Task<Results<Ok<Conversation>, NotFound>> UpdateConversation(
+    private static async Task<Results<Ok<Message>, NotFound>> AddMessage(
         Guid id,
-        UpdateConversationRequest request,
+        AddMessageRequest request,
         ChatbotContext dbContext
     )
     {
-        Conversation? conversation = await dbContext.Conversations.FindAsync(id);
+        Conversation? conversation = await dbContext
+            .Conversations.Include(c => c.Messages)
+            .FirstOrDefaultAsync(c => c.Id == id);
 
         if (conversation is null)
         {
             return TypedResults.NotFound();
         }
 
-        conversation.Name = request.Name;
+        Message newMessage = new()
+        {
+            Role = request.Role,
+            Content = request.Content,
+            CreatedAt = request.CreatedAt,
+        };
+
+        conversation.Messages.Add(newMessage);
+
         _ = await dbContext.SaveChangesAsync();
 
-        return TypedResults.Ok(conversation);
+        return TypedResults.Ok(newMessage);
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteConversation(
@@ -79,7 +86,9 @@ public class ConversationEndpoints : ICarterModule
         ChatbotContext dbContext
     )
     {
-        Conversation? conversation = await dbContext.Conversations.FindAsync(id);
+        Conversation? conversation = await dbContext
+            .Conversations.Include(c => c.Messages)
+            .FirstOrDefaultAsync(c => c.Id == id);
 
         if (conversation is null)
         {

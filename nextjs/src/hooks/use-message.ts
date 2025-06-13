@@ -1,19 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 
-export type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-};
+import { messagesApi } from "@/lib/api/messages";
+import { Conversation, Message } from "@/types";
 
-type ChatRequest = {
-  id: string;
-  messages: {
-    role: string;
-    content: string;
-  }[];
-};
+import { useConversation } from "./use-conversation";
 
 type UseMessageHook = {
   messages: Message[];
@@ -21,53 +12,19 @@ type UseMessageHook = {
   sendMessage: (content: string) => Promise<void>;
 };
 
-async function postMessage(
-  existingMessages: Message[],
-  content: string,
-): Promise<ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>>> {
-  const requestMessages = existingMessages.map((message) => ({
-    role: message.role,
-    content: message.content,
-  }));
-
-  requestMessages.push({
-    role: "user",
-    content,
-  });
-
-  const request: ChatRequest = {
-    id: Date.now().toString(),
-    messages: requestMessages,
-  };
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/dotnet/messages/actions/chat`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-    },
+export function useMessage(
+  conversation: Conversation | undefined,
+  setConversations: Dispatch<SetStateAction<Conversation[]>>,
+): UseMessageHook {
+  const [messages, setMessages] = useState<Message[]>(
+    conversation?.messages ?? [],
   );
 
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
-  }
-
-  if (!response.body) {
-    throw new Error("No response body");
-  }
-
-  return response.body.getReader();
-}
-
-export function useMessage(): UseMessageHook {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { addMessage } = useConversation();
 
   const { mutateAsync: sendMessage, isPending: isLoading } = useMutation({
     mutationFn: async (content: string) => {
-      if (!content.trim()) {
+      if (!content.trim() || !conversation) {
         return;
       }
 
@@ -76,25 +33,37 @@ export function useMessage(): UseMessageHook {
         id: crypto.randomUUID(),
         role: "user",
         content: content.trim(),
+        createdAt: new Date().toISOString(),
       };
 
       setMessages((previous) => [...previous, userMessage]);
 
+      // Add user message to conversation
+      await addMessage({
+        conversationId: conversation.id,
+        role: "user",
+        content: userMessage.content,
+        createdAt: userMessage.createdAt,
+      });
+
       try {
-        const responseBodyReader = await postMessage(messages, content);
+        const responseBodyReader = await messagesApi.postMessage(
+          messages,
+          userMessage,
+        );
 
         // Create assistant message placeholder
-        let assistantMessage = "";
         const assistantMessageUuid = crypto.randomUUID();
+        let content = "";
 
-        setMessages((previous) => [
-          ...previous,
-          {
-            id: assistantMessageUuid,
-            role: "assistant",
-            content: assistantMessage,
-          },
-        ]);
+        const assistantMessage: Message = {
+          id: assistantMessageUuid,
+          role: "assistant",
+          content,
+          createdAt: new Date().toISOString(),
+        };
+
+        setMessages((previous) => [...previous, assistantMessage]);
 
         const decoder = new TextDecoder();
 
@@ -106,28 +75,76 @@ export function useMessage(): UseMessageHook {
           }
 
           const chunk = decoder.decode(value);
-          assistantMessage += chunk;
+          content += chunk;
 
           // Update the assistant's message with the new chunk
           setMessages((previous) =>
             previous.map((message) =>
               message.id === assistantMessageUuid
-                ? { ...message, content: assistantMessage }
+                ? { ...message, content }
                 : message,
             ),
           );
         }
+
+        // After the AI message is complete, add it to the conversation
+        const assistantMessageInDatabase = await addMessage({
+          conversationId: conversation.id,
+          role: "assistant",
+          content,
+          createdAt: assistantMessage.createdAt,
+        });
+
+        // Update the conversation in the conversations array
+        setConversations((previous) =>
+          previous.map((conv) =>
+            conv.id === conversation.id
+              ? {
+                  ...conv,
+                  messages: [
+                    ...conv.messages,
+                    userMessage,
+                    assistantMessageInDatabase,
+                  ],
+                }
+              : conv,
+          ),
+        );
       } catch (error) {
         console.error("Error:", error);
 
-        setMessages((previous) => [
-          ...previous,
-          {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: "Sorry, there was an error processing your request.",
-          },
-        ]);
+        const errorMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Sorry, there was an error processing your request.",
+          createdAt: new Date().toISOString(),
+        };
+
+        // Add error message to conversation
+        const errorMessageInDatabase = await addMessage({
+          conversationId: conversation.id,
+          role: "assistant",
+          content: errorMessage.content,
+          createdAt: errorMessage.createdAt,
+        });
+
+        setMessages((previous) => [...previous, errorMessageInDatabase]);
+
+        // Update the conversation in the conversations array
+        setConversations((previous) =>
+          previous.map((conv) =>
+            conv.id === conversation.id
+              ? {
+                  ...conv,
+                  messages: [
+                    ...conv.messages,
+                    userMessage,
+                    errorMessageInDatabase,
+                  ],
+                }
+              : conv,
+          ),
+        );
       }
     },
   });

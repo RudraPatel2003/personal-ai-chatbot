@@ -1,6 +1,6 @@
 import { JSX } from "react";
 
-import Conversation from "@/components/conversation";
+import Conversation from "@/components/ai-conversation";
 
 export const dynamic = "force-dynamic";
 

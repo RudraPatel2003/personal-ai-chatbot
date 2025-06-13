@@ -1,6 +1,7 @@
 import { JSX } from "react";
+import ReactMarkdown from "react-markdown";
 
-import { Message } from "@/hooks/use-message";
+import { Message } from "@/types";
 
 import { LoadingMessage } from "./loading-message";
 import { TypingMessage } from "./typing-message";
@@ -11,6 +12,26 @@ type MessageListProperties = {
   messagesEndReference: React.RefObject<HTMLDivElement | null>;
 };
 
+function getMessageView(
+  message: Message,
+  messages: Message[],
+  index: number,
+): JSX.Element {
+  if (message.role === "assistant" && index === messages.length - 1) {
+    return <TypingMessage content={message.content} />;
+  }
+
+  if (message.role === "assistant") {
+    return (
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <ReactMarkdown>{message.content}</ReactMarkdown>
+      </div>
+    );
+  }
+
+  return <div>{message.content}</div>;
+}
+
 export default function MessageList({
   messages,
   isLoading,
@@ -18,7 +39,7 @@ export default function MessageList({
 }: MessageListProperties): JSX.Element {
   return (
     <div className="mb-4 flex-1 space-y-4 overflow-y-auto">
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <div
           key={message.id}
           className={`rounded-lg p-4 ${
@@ -27,11 +48,7 @@ export default function MessageList({
               : "bg-gray-100 text-black"
           } max-w-[80%]`}
         >
-          {message.role === "assistant" ? (
-            <TypingMessage content={message.content} />
-          ) : (
-            message.content
-          )}
+          {getMessageView(message, messages, index)}
         </div>
       ))}
       {isLoading && <LoadingMessage />}

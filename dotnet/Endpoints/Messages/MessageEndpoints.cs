@@ -9,7 +9,7 @@ public class MessageEndpoints : ICarterModule
     private static readonly string SystemPrompt = """
         You are a helpful AI assistant.
         You provide accurate, thoughtful, and well-structured responses.
-        You aim to be clear and concise while being thorough when needed.
+        You aim to be clear and concise unless the user asks for more detail.
         You can help with a wide variety of tasks including answering questions, writing, analysis, math, coding, and creative tasks.
         Provide your response in markdown format.
         """;
@@ -18,7 +18,7 @@ public class MessageEndpoints : ICarterModule
     {
         RouteGroupBuilder messagesGroup = app.MapGroup("/messages");
 
-        _ = messagesGroup.MapPost("/actions/chat", HandleChat);
+        _ = messagesGroup.MapPost("/chat", HandleChat);
     }
 
     private static async Task HandleChat(

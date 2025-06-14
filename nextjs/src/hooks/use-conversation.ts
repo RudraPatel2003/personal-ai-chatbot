@@ -1,13 +1,25 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { conversationApi } from "@/lib/api/conversation";
-import { AddMessageRequest, Conversation, Message } from "@/types";
+import {
+  AddMessageRequest,
+  Conversation,
+  CreateConversationRequest,
+  Message,
+  UpdateConversationRequest,
+} from "@/types";
 
 type UseConversationHook = {
   fetchedConversations: Conversation[];
   isLoadingConversations: boolean;
-  createConversation: () => Promise<Conversation>;
+  createConversation: (
+    request: CreateConversationRequest,
+  ) => Promise<Conversation>;
   isCreating: boolean;
+  updateConversation: (
+    request: UpdateConversationRequest,
+  ) => Promise<Conversation>;
+  isUpdating: boolean;
   addMessage: (request: AddMessageRequest) => Promise<Message>;
   isAddingMessage: boolean;
   deleteConversation: (id: string) => Promise<void>;
@@ -26,6 +38,11 @@ export function useConversation(): UseConversationHook {
       mutationFn: conversationApi.create,
     });
 
+  const { mutateAsync: updateConversation, isPending: isUpdating } =
+    useMutation({
+      mutationFn: conversationApi.update,
+    });
+
   const { mutateAsync: addMessage, isPending: isAddingMessage } = useMutation({
     mutationFn: conversationApi.addMessage,
   });
@@ -40,6 +57,8 @@ export function useConversation(): UseConversationHook {
     isLoadingConversations,
     createConversation,
     isCreating,
+    updateConversation,
+    isUpdating,
     addMessage,
     isAddingMessage,
     deleteConversation,

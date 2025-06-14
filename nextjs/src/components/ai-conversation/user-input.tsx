@@ -26,7 +26,7 @@ export default function UserInput({
     setInput("");
   };
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="mt-auto flex gap-2">
       <Input
         value={input}
         onChange={(event) => setInput(event.target.value)}

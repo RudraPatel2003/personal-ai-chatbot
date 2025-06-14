@@ -1,9 +1,9 @@
 import { JSX } from "react";
-import ReactMarkdown from "react-markdown";
 
 import { Message } from "@/types";
 
 import { LoadingMessage } from "./loading-message";
+import MarkdownMessage from "./markdown-message";
 import { TypingMessage } from "./typing-message";
 
 type MessageListProperties = {
@@ -27,11 +27,7 @@ function getMessageView(
   }
 
   if (message.role === "assistant") {
-    return (
-      <div className="prose prose-sm dark:prose-invert max-w-none">
-        <ReactMarkdown>{message.content}</ReactMarkdown>
-      </div>
-    );
+    return <MarkdownMessage content={message.content} />;
   }
 
   return <div>{message.content}</div>;
@@ -49,9 +45,9 @@ export default function MessageList({
           key={message.id}
           className={`rounded-lg p-4 ${
             message.role === "user"
-              ? "ml-auto bg-black text-white"
-              : "bg-gray-100 text-black"
-          } max-w-[80%]`}
+              ? "ml-auto bg-neutral-800"
+              : "bg-neutral-700"
+          } max-w-[60%]`}
         >
           {getMessageView(message, messages, index, isLoading)}
         </div>

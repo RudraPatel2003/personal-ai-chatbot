@@ -1,15 +1,13 @@
 "use client";
 
-import { Loader2, Plus, Trash2 } from "lucide-react";
 import { JSX, useEffect, useRef, useState } from "react";
 
 import { useConversation } from "@/hooks/use-conversation";
 import { useMessage } from "@/hooks/use-message";
 import { Conversation } from "@/types";
 
-import { Button } from "../ui/button";
-import ConversationSelector from "./conversation-selector";
 import MessageList from "./message-list";
+import Sidebar from "./sidebar";
 import UserInput from "./user-input";
 
 export default function AiConversation(): JSX.Element {
@@ -25,7 +23,7 @@ export default function AiConversation(): JSX.Element {
   } = useConversation();
 
   useEffect(() => {
-    if (fetchedConversations) {
+    if (fetchedConversations && fetchedConversations.length > 0) {
       setConversations(fetchedConversations);
     }
   }, [fetchedConversations]);
@@ -51,71 +49,49 @@ export default function AiConversation(): JSX.Element {
     setSelectedConversation(newConversation);
   };
 
-  const handleDeleteConversation = async (): Promise<void> => {
-    if (!selectedConversation) {
-      return;
-    }
-
-    await deleteConversation(selectedConversation.id);
+  const handleDeleteConversation = async (
+    conversationId: string,
+  ): Promise<void> => {
+    await deleteConversation(conversationId);
     setConversations((previous) =>
-      previous.filter((c) => c.id !== selectedConversation.id),
+      previous.filter((c) => c.id !== conversationId),
     );
-    setSelectedConversation(undefined);
+    if (selectedConversation?.id === conversationId) {
+      setSelectedConversation(undefined);
+    }
   };
 
   return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col p-4">
-      <h1 className="mb-6 text-center text-2xl font-bold">LocalGPT</h1>
+    <div className="flex h-screen bg-neutral-900">
+      <Sidebar
+        conversations={conversations}
+        selectedConversation={selectedConversation}
+        setSelectedConversation={setSelectedConversation}
+        onNewConversation={handleNewConversation}
+        onDeleteConversation={handleDeleteConversation}
+        isLoadingConversations={isLoadingConversations}
+      />
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        {isLoadingConversations ? (
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-4 w-4 animate-spin" />
-          </div>
-        ) : (
-          <ConversationSelector
-            conversations={conversations}
-            selectedConversation={selectedConversation}
-            setSelectedConversation={setSelectedConversation}
-          />
-        )}
+      <main className="flex flex-1 flex-col md:pl-64">
+        <div className="mx-auto flex h-full w-[90%] flex-col p-4 lg:w-[60%]">
+          <h1 className="mb-6 text-center text-2xl font-bold">LocalGPT</h1>
 
-        <div className="flex gap-2">
-          <Button
-            onClick={handleNewConversation}
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-          {selectedConversation && (
-            <Button
-              onClick={handleDeleteConversation}
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 text-red-500 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          {selectedConversation ? (
+            <>
+              <MessageList
+                messages={messages}
+                isLoading={isLoading}
+                messagesEndReference={messagesEndReference}
+              />
+              <UserInput sendMessage={sendMessage} isLoading={isLoading} />
+            </>
+          ) : (
+            <div className="flex h-full items-center justify-center text-neutral-400">
+              Select or create a conversation to start chatting
+            </div>
           )}
         </div>
-      </div>
-
-      {selectedConversation ? (
-        <>
-          <MessageList
-            messages={messages}
-            isLoading={isLoading}
-            messagesEndReference={messagesEndReference}
-          />
-          <UserInput sendMessage={sendMessage} isLoading={isLoading} />
-        </>
-      ) : (
-        <div className="flex h-full items-center justify-center text-gray-500">
-          Select or create a conversation to start chatting
-        </div>
-      )}
+      </main>
     </div>
   );
 }

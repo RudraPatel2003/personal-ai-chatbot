@@ -17,6 +17,7 @@ public class ConversationEndpoints : ICarterModule
         _ = conversationsGroup.MapGet("/{id:guid}", GetConversationById);
         _ = conversationsGroup.MapPost("/", CreateConversation);
         _ = conversationsGroup.MapPost("/{id:guid}/messages", AddMessage);
+        _ = conversationsGroup.MapPut("/{id:guid}", UpdateConversation);
         _ = conversationsGroup.MapDelete("/{id:guid}", DeleteConversation);
     }
 
@@ -42,9 +43,12 @@ public class ConversationEndpoints : ICarterModule
         return conversation is null ? TypedResults.NotFound() : TypedResults.Ok(conversation);
     }
 
-    private static async Task<Created<Conversation>> CreateConversation(ChatbotContext dbContext)
+    private static async Task<Created<Conversation>> CreateConversation(
+        CreateConversationRequest request,
+        ChatbotContext dbContext
+    )
     {
-        Conversation conversation = new() { Messages = [] };
+        Conversation conversation = new() { Name = request.Name, Messages = [] };
 
         _ = dbContext.Conversations.Add(conversation);
         _ = await dbContext.SaveChangesAsync();
@@ -79,6 +83,26 @@ public class ConversationEndpoints : ICarterModule
         _ = await dbContext.SaveChangesAsync();
 
         return TypedResults.Ok(newMessage);
+    }
+
+    private static async Task<Results<Ok<Conversation>, NotFound>> UpdateConversation(
+        Guid id,
+        UpdateConversationRequest request,
+        ChatbotContext dbContext
+    )
+    {
+        Conversation? conversation = await dbContext.Conversations.FindAsync(id);
+
+        if (conversation is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        conversation.Name = request.Name;
+
+        _ = await dbContext.SaveChangesAsync();
+
+        return TypedResults.Ok(conversation);
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteConversation(

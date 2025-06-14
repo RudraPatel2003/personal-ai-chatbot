@@ -1,5 +1,6 @@
 import { JSX, useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+
+import MarkdownMessage from "./markdown-message";
 
 const MESSAGE_UPDATE_SPEED_IN_MS = 3;
 
@@ -25,9 +26,5 @@ export function TypingMessage({
     return undefined;
   }, [content, currentIndex]);
 
-  return (
-    <div className="prose prose-sm dark:prose-invert max-w-none">
-      <ReactMarkdown>{displayedContent}</ReactMarkdown>
-    </div>
-  );
+  return <MarkdownMessage content={displayedContent} />;
 }

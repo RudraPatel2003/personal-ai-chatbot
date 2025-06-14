@@ -1,16 +1,17 @@
 import { Menu, Plus, Trash2 } from "lucide-react";
 import { JSX, useState } from "react";
 
-import { cn } from "@/lib/utilities";
+import { cn } from "@/lib/utils";
 import { Conversation } from "@/types";
 
 import { Button } from "../ui/button";
+import CreateConversationForm from "./create-conversation-form";
 
-type SidebarProperties = {
+type SidebarProps = {
   conversations: Conversation[];
   selectedConversation: Conversation | undefined;
   setSelectedConversation: (conversation: Conversation | undefined) => void;
-  onNewConversation: () => Promise<void>;
+  onNewConversation: (name: string) => Promise<void>;
   onDeleteConversation: (conversationId: string) => Promise<void>;
   isLoadingConversations: boolean;
 };
@@ -22,8 +23,9 @@ export default function Sidebar({
   onNewConversation,
   onDeleteConversation,
   isLoadingConversations,
-}: SidebarProperties): JSX.Element {
+}: SidebarProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   return (
     <>
@@ -58,7 +60,7 @@ export default function Sidebar({
             Conversations
           </h2>
           <Button
-            onClick={onNewConversation}
+            onClick={() => setIsCreateDialogOpen(true)}
             variant="ghost"
             size="icon"
             className="h-8 w-8"
@@ -92,7 +94,7 @@ export default function Sidebar({
                   className="flex-1 truncate text-left"
                   onClick={() => setSelectedConversation(conversation)}
                 >
-                  {conversation.id}
+                  {conversation.name}
                 </button>
                 <Button
                   variant="ghost"
@@ -107,6 +109,12 @@ export default function Sidebar({
           )}
         </div>
       </div>
+
+      <CreateConversationForm
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSubmit={onNewConversation}
+      />
     </>
   );
 }

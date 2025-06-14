@@ -8,6 +8,9 @@ import eslintPluginUnicorn from "eslint-plugin-unicorn";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
+  {
+    ignores: ["src/components/ui/"],
+  },
   eslint.configs.recommended,
   tseslint.configs.recommended,
   tseslint.configs.stylistic,
@@ -32,6 +35,7 @@ export default tseslint.config(
       // Formatting and style rules
       "prettier/prettier": "error",
       "no-console": ["error", { allow: ["error"] }],
+      "unicorn/prevent-abbreviations": "off",
 
       // Next.js rules
       ...pluginNext.configs.recommended.rules,

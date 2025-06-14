@@ -3,7 +3,7 @@ import { JSX, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
-type UserInputProperties = {
+type UserInputProps = {
   sendMessage: (message: string) => Promise<void>;
   isLoading: boolean;
 };
@@ -11,7 +11,7 @@ type UserInputProperties = {
 export default function UserInput({
   sendMessage,
   isLoading,
-}: UserInputProperties): JSX.Element {
+}: UserInputProps): JSX.Element {
   const [input, setInput] = useState("");
 
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {

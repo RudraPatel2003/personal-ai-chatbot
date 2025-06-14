@@ -4,13 +4,11 @@ import MarkdownMessage from "./markdown-message";
 
 const MESSAGE_UPDATE_SPEED_IN_MS = 3;
 
-type TypingMessageProperties = {
+type TypingMessageProps = {
   content: string;
 };
 
-export function TypingMessage({
-  content,
-}: TypingMessageProperties): JSX.Element {
+export function TypingMessage({ content }: TypingMessageProps): JSX.Element {
   const [displayedContent, setDisplayedContent] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
 

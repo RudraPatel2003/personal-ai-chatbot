@@ -6,7 +6,7 @@ import { LoadingMessage } from "./loading-message";
 import MarkdownMessage from "./markdown-message";
 import { TypingMessage } from "./typing-message";
 
-type MessageListProperties = {
+type MessageListProps = {
   messages: Message[];
   isLoading: boolean;
   messagesEndReference: React.RefObject<HTMLDivElement | null>;
@@ -37,7 +37,7 @@ export default function MessageList({
   messages,
   isLoading,
   messagesEndReference,
-}: MessageListProperties): JSX.Element {
+}: MessageListProps): JSX.Element {
   return (
     <div className="mb-4 flex-1 space-y-4 overflow-y-auto">
       {messages.map((message, index) => (

@@ -1,6 +1,7 @@
 import { BaseModel, Message } from ".";
 
 export type Conversation = BaseModel & {
+  name: string;
   messages: Message[];
 };
 

@@ -43,8 +43,8 @@ export default function AiConversation(): JSX.Element {
     scrollToBottom();
   }, [messages]);
 
-  const handleNewConversation = async (): Promise<void> => {
-    const newConversation = await createConversation();
+  const handleNewConversation = async (name: string): Promise<void> => {
+    const newConversation = await createConversation({ name });
     setConversations((previous) => [...previous, newConversation]);
     setSelectedConversation(newConversation);
   };

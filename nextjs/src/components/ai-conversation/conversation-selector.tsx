@@ -20,6 +20,12 @@ export default function ConversationSelector({
   selectedConversation,
   setSelectedConversation,
 }: ConversationSelectorProperties): JSX.Element {
+  if (conversations.length === 0) {
+    return (
+      <div className="muted-foreground text-sm">No conversations available</div>
+    );
+  }
+
   return (
     <Select
       value={selectedConversation?.id}

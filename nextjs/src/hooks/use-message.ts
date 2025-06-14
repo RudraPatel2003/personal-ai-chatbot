@@ -20,6 +20,7 @@ export function useMessage(
 
   const { addMessage } = useConversation();
 
+  // Only update messages when conversation changes
   useEffect(() => {
     setMessages(conversation?.messages ?? []);
   }, [conversation]);
@@ -38,20 +39,21 @@ export function useMessage(
         createdAt: new Date().toISOString(),
       };
 
-      setMessages((previous) => [...previous, userMessage]);
-
-      // Add user message to conversation
-      await addMessage({
+      // Add user message to conversation first
+      const userMessageInDatabase = await addMessage({
         conversationId: conversation.id,
         role: "user",
         content: userMessage.content,
         createdAt: userMessage.createdAt,
       });
 
+      // Update local messages with the database version
+      setMessages((previous) => [...previous, userMessageInDatabase]);
+
       try {
         const responseBodyReader = await messagesApi.postMessage(
           messages,
-          userMessage,
+          userMessageInDatabase,
         );
 
         // Create assistant message placeholder
@@ -65,6 +67,7 @@ export function useMessage(
           createdAt: new Date().toISOString(),
         };
 
+        // Add initial empty assistant message
         setMessages((previous) => [...previous, assistantMessage]);
 
         const decoder = new TextDecoder();
@@ -105,11 +108,20 @@ export function useMessage(
                   ...conv,
                   messages: [
                     ...conv.messages,
-                    userMessage,
+                    userMessageInDatabase,
                     assistantMessageInDatabase,
                   ],
                 }
               : conv,
+          ),
+        );
+
+        // Update local messages with the final database version
+        setMessages((previous) =>
+          previous.map((message) =>
+            message.id === assistantMessageUuid
+              ? assistantMessageInDatabase
+              : message,
           ),
         );
       } catch (error) {
@@ -130,6 +142,7 @@ export function useMessage(
           createdAt: errorMessage.createdAt,
         });
 
+        // Update local messages with the error message
         setMessages((previous) => [...previous, errorMessageInDatabase]);
 
         // Update the conversation in the conversations array
@@ -140,7 +153,7 @@ export function useMessage(
                   ...conv,
                   messages: [
                     ...conv.messages,
-                    userMessage,
+                    userMessageInDatabase,
                     errorMessageInDatabase,
                   ],
                 }

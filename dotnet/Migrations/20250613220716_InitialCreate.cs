@@ -31,7 +31,7 @@ public partial class InitialCreate : Migration
                 Id = table.Column<Guid>(type: "uuid", nullable: false),
                 Role = table.Column<string>(type: "text", nullable: false),
                 Content = table.Column<string>(type: "text", nullable: false),
-                ConversationId = table.Column<Guid>(type: "uuid", nullable: true),
+                ConversationId = table.Column<Guid>(type: "uuid", nullable: false),
                 CreatedAt = table.Column<DateTime>(
                     type: "timestamp with time zone",
                     nullable: false,
@@ -45,7 +45,8 @@ public partial class InitialCreate : Migration
                     name: "FK_Messages_Conversations_ConversationId",
                     column: x => x.ConversationId,
                     principalTable: "Conversations",
-                    principalColumn: "Id"
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade
                 );
             }
         );

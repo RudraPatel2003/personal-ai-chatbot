@@ -1,11 +1,18 @@
+using System.Text.Json.Serialization;
 using Carter;
 using Dotnet.Database.Context;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
+
+// Add JSON serialization configuration
+builder.Services.Configure<JsonOptions>(options =>
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles
+);
 
 // Add DbContext
 string connectionString =

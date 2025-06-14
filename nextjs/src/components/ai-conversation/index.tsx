@@ -52,7 +52,10 @@ export default function AiConversation(): JSX.Element {
   };
 
   const handleDeleteConversation = async (): Promise<void> => {
-    if (!selectedConversation) return;
+    if (!selectedConversation) {
+      return;
+    }
+
     await deleteConversation(selectedConversation.id);
     setConversations((previous) =>
       previous.filter((c) => c.id !== selectedConversation.id),
@@ -62,7 +65,7 @@ export default function AiConversation(): JSX.Element {
 
   return (
     <div className="mx-auto flex h-screen max-w-3xl flex-col p-4">
-      <h1 className="mb-6 text-center text-2xl font-bold">Local AI Chatbot</h1>
+      <h1 className="mb-6 text-center text-2xl font-bold">LocalGPT</h1>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         {isLoadingConversations ? (

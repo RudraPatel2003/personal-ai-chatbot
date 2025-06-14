@@ -48,7 +48,7 @@ namespace Dotnet.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("ConversationId")
+                    b.Property<Guid>("ConversationId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -69,9 +69,13 @@ namespace Dotnet.Migrations
 
             modelBuilder.Entity("Dotnet.Database.Models.Message", b =>
                 {
-                    b.HasOne("Dotnet.Database.Models.Conversation", null)
+                    b.HasOne("Dotnet.Database.Models.Conversation", "Conversation")
                         .WithMany("Messages")
-                        .HasForeignKey("ConversationId");
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
                 });
 
             modelBuilder.Entity("Dotnet.Database.Models.Conversation", b =>

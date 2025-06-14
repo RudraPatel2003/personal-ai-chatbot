@@ -1,11 +1,13 @@
-import { Menu, Plus, Trash2 } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { JSX, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Conversation } from "@/types";
 
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
+import ConversationCard from "./conversation-card";
 import CreateConversationForm from "./create-conversation-form";
+import EditConversationForm from "./edit-conversation-form";
 
 type SidebarProps = {
   conversations: Conversation[];
@@ -13,6 +15,10 @@ type SidebarProps = {
   setSelectedConversation: (conversation: Conversation | undefined) => void;
   onNewConversation: (name: string) => Promise<void>;
   onDeleteConversation: (conversationId: string) => Promise<void>;
+  onUpdateConversation: (
+    conversationId: string,
+    newName: string,
+  ) => Promise<void>;
   isLoadingConversations: boolean;
 };
 
@@ -22,10 +28,13 @@ export default function Sidebar({
   setSelectedConversation,
   onNewConversation,
   onDeleteConversation,
+  onUpdateConversation,
   isLoadingConversations,
 }: SidebarProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingConversation, setEditingConversation] =
+    useState<Conversation>();
 
   return (
     <>
@@ -69,7 +78,7 @@ export default function Sidebar({
           </Button>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 overflow-y-auto">
           {isLoadingConversations ? (
             <div className="flex items-center justify-center py-4">
               <div className="border-sidebar-foreground h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
@@ -80,31 +89,14 @@ export default function Sidebar({
             </div>
           ) : (
             conversations.map((conversation) => (
-              <div
+              <ConversationCard
                 key={conversation.id}
-                className={cn(
-                  "group flex items-center justify-between rounded-lg p-2 text-sm transition-colors",
-                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  selectedConversation?.id === conversation.id
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground",
-                )}
-              >
-                <button
-                  className="flex-1 truncate text-left"
-                  onClick={() => setSelectedConversation(conversation)}
-                >
-                  {conversation.name}
-                </button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="z-10 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-neutral-800"
-                  onClick={() => onDeleteConversation(conversation.id)}
-                >
-                  <Trash2 className="h-3 w-3 text-red-500" />
-                </Button>
-              </div>
+                conversation={conversation}
+                isSelected={selectedConversation?.id === conversation.id}
+                onSelect={setSelectedConversation}
+                onDelete={onDeleteConversation}
+                onEdit={setEditingConversation}
+              />
             ))
           )}
         </div>
@@ -115,6 +107,15 @@ export default function Sidebar({
         onClose={() => setIsCreateDialogOpen(false)}
         onSubmit={onNewConversation}
       />
+
+      {editingConversation && (
+        <EditConversationForm
+          conversation={editingConversation}
+          isOpen={!!editingConversation}
+          onClose={() => setEditingConversation(undefined)}
+          onSubmit={onUpdateConversation}
+        />
+      )}
     </>
   );
 }

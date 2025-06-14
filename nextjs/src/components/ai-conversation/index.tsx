@@ -20,6 +20,7 @@ export default function AiConversation(): JSX.Element {
     isLoadingConversations,
     createConversation,
     deleteConversation,
+    updateConversation,
   } = useConversation();
 
   useEffect(() => {
@@ -61,6 +62,16 @@ export default function AiConversation(): JSX.Element {
     }
   };
 
+  const handleUpdateConversation = async (
+    conversationId: string,
+    name: string,
+  ): Promise<void> => {
+    await updateConversation({ conversationId, name });
+    setConversations((previous) =>
+      previous.map((c) => (c.id === conversationId ? { ...c, name } : c)),
+    );
+  };
+
   return (
     <div className="flex h-screen bg-neutral-900">
       <Sidebar
@@ -69,6 +80,7 @@ export default function AiConversation(): JSX.Element {
         setSelectedConversation={setSelectedConversation}
         onNewConversation={handleNewConversation}
         onDeleteConversation={handleDeleteConversation}
+        onUpdateConversation={handleUpdateConversation}
         isLoadingConversations={isLoadingConversations}
       />
 

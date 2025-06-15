@@ -1,4 +1,4 @@
-import { Menu, Plus } from "lucide-react";
+import { Menu, Plus, Settings } from "lucide-react";
 import { JSX, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { Button } from "../../ui/button";
 import ConversationCard from "./conversation-card";
 import CreateConversationForm from "./create-conversation-form";
 import EditConversationForm from "./edit-conversation-form";
+import EditSystemPromptForm from "./edit-system-prompt-form";
 
 type SidebarProps = {
   conversations: Conversation[];
@@ -20,6 +21,8 @@ type SidebarProps = {
     newName: string,
   ) => Promise<void>;
   isLoadingConversations: boolean;
+  systemPrompt: string;
+  onEditSystemPrompt: (newSystemPrompt: string) => void;
 };
 
 export default function Sidebar({
@@ -30,11 +33,14 @@ export default function Sidebar({
   onDeleteConversation,
   onUpdateConversation,
   isLoadingConversations,
+  systemPrompt,
+  onEditSystemPrompt,
 }: SidebarProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingConversation, setEditingConversation] =
     useState<Conversation>();
+  const [isEditingSystemPrompt, setIsEditingSystemPrompt] = useState(false);
 
   return (
     <>
@@ -59,46 +65,61 @@ export default function Sidebar({
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed top-0 left-0 z-40 h-full w-64 transform bg-neutral-950 p-4 transition-transform duration-200 ease-in-out",
-          "border-sidebar-border border-r",
+          "fixed top-0 left-0 z-40 h-full w-64 transform bg-neutral-950 transition-transform duration-200 ease-in-out",
+          "border-sidebar-border flex flex-col border-r",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sidebar-foreground text-lg font-semibold">
-            Conversations
-          </h2>
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+        <div className="border-sidebar-border border-b p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sidebar-foreground text-lg font-semibold">
+              Conversations
+            </h2>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        <div className="space-y-2 overflow-y-auto">
-          {isLoadingConversations ? (
-            <div className="flex items-center justify-center py-4">
-              <div className="border-sidebar-foreground h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
-            </div>
-          ) : conversations.length === 0 ? (
-            <div className="text-sidebar-muted-foreground text-center text-sm">
-              No conversations
-            </div>
-          ) : (
-            conversations.map((conversation) => (
-              <ConversationCard
-                key={conversation.id}
-                conversation={conversation}
-                isSelected={selectedConversation?.id === conversation.id}
-                onSelect={setSelectedConversation}
-                onDelete={onDeleteConversation}
-                onEdit={setEditingConversation}
-              />
-            ))
-          )}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-2">
+            {isLoadingConversations ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="border-sidebar-foreground h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="text-sidebar-muted-foreground text-center text-sm">
+                No conversations
+              </div>
+            ) : (
+              conversations.map((conversation) => (
+                <ConversationCard
+                  key={conversation.id}
+                  conversation={conversation}
+                  isSelected={selectedConversation?.id === conversation.id}
+                  onSelect={setSelectedConversation}
+                  onDelete={onDeleteConversation}
+                  onEdit={setEditingConversation}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="border-sidebar-border border-t p-4">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2"
+            onClick={() => setIsEditingSystemPrompt(true)}
+          >
+            <Settings className="h-4 w-4" />
+            Edit System Prompt
+          </Button>
         </div>
       </div>
 
@@ -114,6 +135,15 @@ export default function Sidebar({
           isOpen={!!editingConversation}
           onClose={() => setEditingConversation(undefined)}
           onSubmit={onUpdateConversation}
+        />
+      )}
+
+      {isEditingSystemPrompt && (
+        <EditSystemPromptForm
+          isOpen={isEditingSystemPrompt}
+          onClose={() => setIsEditingSystemPrompt(false)}
+          onSubmit={onEditSystemPrompt}
+          systemPrompt={systemPrompt}
         />
       )}
     </>

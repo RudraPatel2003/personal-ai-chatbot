@@ -13,8 +13,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Local AI Chatbot",
-  description: "A Docker-first local AI chatbot",
+  title: "Personal AI Chatbot",
+  description: "A Docker-first personal AI chatbot",
 };
 
 export default function RootLayout({

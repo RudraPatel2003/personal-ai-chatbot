@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Carter;
 using Dotnet.Database.Context;
+using Dotnet.Services.Logging;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ builder.Services.Configure<JsonOptions>(options =>
 
 // Add DbContext
 string connectionString =
-    builder.Configuration.GetConnectionString("LocalAiChatbot")
+    builder.Configuration.GetConnectionString("PersonalAiChatbot")
     ?? throw new ArgumentException("Connection string is not set");
 
 builder.Services.AddDbContext<ChatbotContext>(options =>
@@ -44,6 +45,9 @@ builder.Services.AddSingleton<IChatClient>(serviceProvider => new OllamaChatClie
     ollamaModel
 ));
 
+// Add Logging Service
+builder.Services.AddSingleton<ILoggingService, RabbitMqLogger>();
+
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>
@@ -68,7 +72,7 @@ if (app.Environment.IsDevelopment())
     _ = app.UseOpenApi();
     _ = app.UseSwaggerUi(config =>
     {
-        config.DocumentTitle = "LocalAiChatbot";
+        config.DocumentTitle = "PersonalAiChatbot";
         config.Path = "/swagger";
         config.DocumentPath = "/swagger/{documentName}/swagger.json";
         config.DocExpansion = "list";

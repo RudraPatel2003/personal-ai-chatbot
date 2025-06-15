@@ -2,6 +2,7 @@ using Carter;
 using Dotnet.Database.Context;
 using Dotnet.Database.Models;
 using Dotnet.Endpoints.Conversations.Requests;
+using Dotnet.Services.Logging;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,10 +22,15 @@ public class ConversationEndpoints : ICarterModule
         _ = conversationsGroup.MapDelete("/{id:guid}", DeleteConversation);
     }
 
-    private static async Task<Ok<List<Conversation>>> GetAllConversations(ChatbotContext dbContext)
+    private static async Task<Ok<List<Conversation>>> GetAllConversations(
+        ChatbotContext dbContext,
+        ILoggingService loggingService
+    )
     {
+        await loggingService.Log("GET /api/dotnet/conversations", null);
+
         List<Conversation> conversations = await dbContext
-            .Conversations.Include(c => c.Messages)
+            .Conversations.Include(c => c.Messages.OrderBy(m => m.CreatedAt))
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
 
@@ -33,9 +39,12 @@ public class ConversationEndpoints : ICarterModule
 
     private static async Task<Results<Ok<Conversation>, NotFound>> GetConversationById(
         Guid id,
-        ChatbotContext dbContext
+        ChatbotContext dbContext,
+        ILoggingService loggingService
     )
     {
+        await loggingService.Log($"GET /api/dotnet/conversations/{id}", null);
+
         Conversation? conversation = await dbContext
             .Conversations.Include(c => c.Messages)
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -45,9 +54,12 @@ public class ConversationEndpoints : ICarterModule
 
     private static async Task<Created<Conversation>> CreateConversation(
         CreateConversationRequest request,
-        ChatbotContext dbContext
+        ChatbotContext dbContext,
+        ILoggingService loggingService
     )
     {
+        await loggingService.Log("POST /api/dotnet/conversations", request);
+
         Conversation conversation = new() { Name = request.Name, Messages = [] };
 
         _ = dbContext.Conversations.Add(conversation);
@@ -59,9 +71,12 @@ public class ConversationEndpoints : ICarterModule
     private static async Task<Results<Ok<Message>, NotFound>> AddMessage(
         Guid id,
         AddMessageRequest request,
-        ChatbotContext dbContext
+        ChatbotContext dbContext,
+        ILoggingService loggingService
     )
     {
+        await loggingService.Log($"POST /api/dotnet/conversations/{id}/messages", request);
+
         Conversation? conversation = await dbContext
             .Conversations.Include(c => c.Messages)
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -88,9 +103,12 @@ public class ConversationEndpoints : ICarterModule
     private static async Task<Results<Ok<Conversation>, NotFound>> UpdateConversation(
         Guid id,
         UpdateConversationRequest request,
-        ChatbotContext dbContext
+        ChatbotContext dbContext,
+        ILoggingService loggingService
     )
     {
+        await loggingService.Log($"PUT /api/dotnet/conversations/{id}", request);
+
         Conversation? conversation = await dbContext.Conversations.FindAsync(id);
 
         if (conversation is null)
@@ -107,9 +125,12 @@ public class ConversationEndpoints : ICarterModule
 
     private static async Task<Results<NoContent, NotFound>> DeleteConversation(
         Guid id,
-        ChatbotContext dbContext
+        ChatbotContext dbContext,
+        ILoggingService loggingService
     )
     {
+        await loggingService.Log($"DELETE /api/dotnet/conversations/{id}", null);
+
         Conversation? conversation = await dbContext
             .Conversations.Include(c => c.Messages)
             .FirstOrDefaultAsync(c => c.Id == id);

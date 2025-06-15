@@ -36,6 +36,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   nginx:
     container_name: nginx
@@ -48,9 +50,10 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:80/api/dotnet/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
     depends_on:
       dotnet:
+        condition: service_healthy
+      go:
         condition: service_healthy
 
   nextjs:
@@ -70,7 +73,7 @@ services:
   postgres:
     image: postgres:17.5-alpine
     container_name: postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
@@ -85,3 +88,40 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:4.1.1-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=password
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  go:
+    container_name: go
+    build:
+      context: ./go
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./go:/go/src/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      dotnet:
+        condition: service_healthy

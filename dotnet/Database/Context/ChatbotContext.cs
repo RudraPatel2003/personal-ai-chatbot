@@ -7,6 +7,7 @@ public class ChatbotContext(DbContextOptions<ChatbotContext> options) : DbContex
 {
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<Log> Logs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

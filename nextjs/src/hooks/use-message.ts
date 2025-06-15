@@ -5,11 +5,23 @@ import { messagesApi } from "@/lib/api/messages";
 import { Conversation, Message } from "@/types";
 
 import { useConversation } from "./use-conversation";
+import useLocalStorage from "./use-local-storage";
+
+const SYSTEM_PROMPT_KEY = "system-prompt";
+
+export const DEFAULT_SYSTEM_PROMPT =
+  "You are a helpful AI assistant. \
+  You provide accurate, thoughtful, and well-structured responses. \
+  You aim to be clear and concise unless the user asks for more detail. \
+  You can help with a wide variety of tasks including answering questions, writing, analysis, math, coding, and creative tasks. \
+  Provide your response in markdown format.";
 
 type UseMessageHook = {
   messages: Message[];
   isLoading: boolean;
   sendMessage: (content: string) => Promise<void>;
+  systemPrompt: string;
+  setSystemPrompt: (systemPrompt: string) => void;
 };
 
 export function useMessage(
@@ -17,6 +29,10 @@ export function useMessage(
   setConversations: Dispatch<SetStateAction<Conversation[]>>,
 ): UseMessageHook {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [systemPrompt, setSystemPrompt] = useLocalStorage(
+    SYSTEM_PROMPT_KEY,
+    DEFAULT_SYSTEM_PROMPT,
+  );
 
   const { addMessage } = useConversation();
 
@@ -54,6 +70,7 @@ export function useMessage(
         const responseBodyReader = await messagesApi.postMessage(
           messages,
           userMessageInDatabase,
+          systemPrompt,
         );
 
         // Create assistant message placeholder
@@ -168,5 +185,7 @@ export function useMessage(
     messages,
     isLoading,
     sendMessage,
+    systemPrompt,
+    setSystemPrompt,
   };
 }

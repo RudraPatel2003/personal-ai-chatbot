@@ -26,6 +26,7 @@
     <PackageReference Include="Microsoft.Extensions.AI.Ollama" Version="9.5.0-preview.1.25265.7" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.4.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     <!-- 
     If you don't add these, Microsoft.EntityFrameworkCore.Design will complain 
     about dependency version mismatches.

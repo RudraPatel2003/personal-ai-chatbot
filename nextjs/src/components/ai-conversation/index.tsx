@@ -24,15 +24,11 @@ export default function AiConversation(): JSX.Element {
   } = useConversation();
 
   useEffect(() => {
-    if (fetchedConversations && fetchedConversations.length > 0) {
-      setConversations(fetchedConversations);
-    }
+    setConversations(fetchedConversations);
   }, [fetchedConversations]);
 
-  const { messages, sendMessage, isLoading } = useMessage(
-    selectedConversation,
-    setConversations,
-  );
+  const { messages, sendMessage, isLoading, systemPrompt, setSystemPrompt } =
+    useMessage(selectedConversation, setConversations);
 
   const messagesEndReference = useRef<HTMLDivElement>(null);
 
@@ -82,6 +78,8 @@ export default function AiConversation(): JSX.Element {
         onDeleteConversation={handleDeleteConversation}
         onUpdateConversation={handleUpdateConversation}
         isLoadingConversations={isLoadingConversations}
+        systemPrompt={systemPrompt}
+        onEditSystemPrompt={setSystemPrompt}
       />
 
       <main className="flex flex-1 flex-col md:pl-64">

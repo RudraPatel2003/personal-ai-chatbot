@@ -1,1 +1,1 @@
-# Personal AI ChatBot
+# Personal AI Chatbot

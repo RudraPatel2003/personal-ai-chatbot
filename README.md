@@ -17,13 +17,27 @@ Run a fully local, Docker-first personal AI chatbot that puts you in control of 
 
 ## Getting Started
 
+### Prerequisites
+
+- Docker
+- A computer powerful enough to run the Llama 3 model (~16GB of RAM)
+
+> [!WARNING]
+> The first chat you send will take a while to respond as the model warms up.
+
 ### Development Mode
 
-To run the app in development mode, where code changes are hot reloaded, run `dev.sh`
+To run the app in development mode, where code changes are hot reloaded, run `dev.sh` and go to `http://localhost:3000` in your browser.
 
 ### Production Mode
 
-To run the app in production mode, run `prod.sh`
+To run the app in production mode, run `prod.sh` and go to `http://localhost:3000` in your browser.
+
+## Website Overview
+
+![Example 1](assets/example1.png)
+![Example 2](assets/example2.png)
+![Example 3](assets/example3.png)
 
 ## Architecture Overview
 

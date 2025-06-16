@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -24,18 +25,21 @@ func SetupRouter() *gin.Engine {
 
 		cursorNum, err := strconv.Atoi(cursor)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid cursor parameter"})
 			return
 		}
 
 		limitNum, err := strconv.Atoi(limit)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid limit parameter"})
 			return
 		}
 
 		logs, nextCursor, err := database.GetLogs(cursorNum, limitNum)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch logs"})
 			return
 		}

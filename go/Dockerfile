@@ -1,21 +1,21 @@
-# development stage
-FROM golang:alpine AS development
+FROM golang:alpine AS base
 
 WORKDIR /go/src/app
 
 COPY . .
+
+RUN apk add --no-cache curl
+
+# development stage
+FROM base AS development
 
 RUN go get -d -v ./... && go install github.com/air-verse/air@latest
 
 CMD ["air", "-c", ".air.toml"]
 
 # build stage
-FROM golang:alpine AS builder
+FROM base AS builder
 RUN apk add --no-cache git
-
-WORKDIR /go/src/app
-
-COPY . .
 
 RUN go get -d -v ./... 
 

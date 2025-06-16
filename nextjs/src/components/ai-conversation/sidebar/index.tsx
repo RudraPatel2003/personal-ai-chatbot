@@ -92,10 +92,6 @@ export default function Sidebar({
               <div className="flex items-center justify-center py-4">
                 <div className="border-sidebar-foreground h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
               </div>
-            ) : conversations.length === 0 ? (
-              <div className="text-sidebar-muted-foreground text-center text-sm">
-                No conversations
-              </div>
             ) : (
               conversations.map((conversation) => (
                 <ConversationCard

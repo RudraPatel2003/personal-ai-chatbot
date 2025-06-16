@@ -24,7 +24,9 @@ export default function AiConversation(): JSX.Element {
   } = useConversation();
 
   useEffect(() => {
-    setConversations(fetchedConversations);
+    if (!isLoadingConversations) {
+      setConversations(fetchedConversations);
+    }
   }, [fetchedConversations]);
 
   const { messages, sendMessage, isLoading, systemPrompt, setSystemPrompt } =

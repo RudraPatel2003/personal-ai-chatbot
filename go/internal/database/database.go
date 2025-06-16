@@ -25,20 +25,21 @@ func InitDB() {
 
 func InsertLog(logMessage models.LogMessage) {
 	query := `
-		INSERT INTO logs (id, title, description, created_at)
-		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (id) DO UPDATE
-		SET title = $2, description = $3, created_at = $4`
+		INSERT INTO "Logs" ("Id", "Title", "Description", "CreatedBy", "CreatedAt")
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT ("Id") DO UPDATE
+		SET "Title" = $2, "Description" = $3, "CreatedBy" = $4, "CreatedAt" = $5
+		`
 
-	_, err := db.Exec(context.Background(), query, logMessage.Id, logMessage.Title, logMessage.Description, logMessage.CreatedAt)
+	_, err := db.Exec(context.Background(), query, logMessage.Id, logMessage.Title, logMessage.Description, logMessage.CreatedBy, logMessage.CreatedAt)
 	utils.FailOnError(err, "Failed to insert log into database")
 }
 
 func GetLogs(cursor int, limit int) ([]models.LogMessage, int, error) {
 	query := `
-		SELECT id, title, description, created_at
-		FROM logs
-		ORDER BY created_at DESC
+		SELECT *
+		FROM "Logs"
+		ORDER BY "CreatedAt" DESC
 		LIMIT $1 OFFSET $2`
 
 	rows, err := db.Query(context.Background(), query, limit, cursor)
@@ -51,7 +52,7 @@ func GetLogs(cursor int, limit int) ([]models.LogMessage, int, error) {
 
 	for rows.Next() {
 		var log models.LogMessage
-		err := rows.Scan(&log.Id, &log.Title, &log.Description, &log.CreatedAt)
+		err := rows.Scan(&log.Id, &log.Title, &log.Description, &log.CreatedBy, &log.CreatedAt)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -67,6 +68,8 @@ func GetLogs(cursor int, limit int) ([]models.LogMessage, int, error) {
 	var nextCursor int
 	if len(logs) == limit {
 		nextCursor = cursor + limit
+	} else {
+		nextCursor = 0
 	}
 
 	return logs, nextCursor, nil

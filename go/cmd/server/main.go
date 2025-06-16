@@ -13,7 +13,9 @@ func main() {
 	database.InitDB()
 
 	// Setup RabbitMQ
-	rabbitmq.SetupRabbitMQ()
+	go func() {
+		rabbitmq.SetupRabbitMQ()
+	}()
 
 	// Setup and start the router
 	r := router.SetupRouter()

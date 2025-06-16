@@ -51,6 +51,8 @@ func SetupRabbitMQ() {
 	)
 	utils.FailOnError(err, "Failed to register a consumer")
 
+	forever := make(chan struct{})
+
 	go func() {
 		for d := range msgs {
 			var logMessage models.LogMessage
@@ -63,4 +65,5 @@ func SetupRabbitMQ() {
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	<-forever
 }

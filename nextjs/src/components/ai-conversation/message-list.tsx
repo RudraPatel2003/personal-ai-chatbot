@@ -46,7 +46,7 @@ export default function MessageList({
             message.role === "user"
               ? "ml-auto bg-neutral-800"
               : "bg-neutral-700"
-          } max-w-[60%]`}
+          } max-w-[90%] lg:max-w-[60%]`}
         >
           {getMessageView(message, messages, index, isLoading)}
         </div>

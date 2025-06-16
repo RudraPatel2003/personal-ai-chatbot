@@ -1,0 +1,100 @@
+name: pr-check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+    branches:
+      - main
+
+jobs:
+  title-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that PR title follows conventional commits using regex
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Your PR title is '$TITLE'"
+
+          regex="(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z[[:space:]]+\))?:[[:space:]].+"
+
+          if [[ $TITLE =~ $regex ]]; then
+            echo "PR title follows conventional commits"
+          else
+            echo "PR title does not follow conventional commits format"
+            echo "Prefix your PR title with a descriptor such as 'feat:' and then summarize your change"
+            echo "See the following link for more information: https://www.conventionalcommits.org/en/v1.0.0/"
+            exit 1
+          fi
+
+  nextjs-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Go into nextjs directory
+        run: cd nextjs
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "9.4.0"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/iron"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check that project builds
+        run: pnpm run build
+
+  go-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Go into go directory
+        run: cd go
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+
+  dotnet-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Go into dotnet directory
+        run: cd dotnet
+
+      - name: Run csharpier
+        run: |
+          dotnet tool restore
+          dotnet csharpier check .
+
+      - name: Run dotnet build
+        run: dotnet build

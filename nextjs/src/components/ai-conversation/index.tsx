@@ -87,7 +87,9 @@ export default function AiConversation(): JSX.Element {
 
       <main className="flex flex-1 flex-col md:pl-64">
         <div className="mx-auto flex h-full w-[90%] flex-col p-4 lg:w-[60%]">
-          <h1 className="mb-6 text-center text-2xl font-bold">LocalGPT</h1>
+          <h1 className="mb-6 text-center text-2xl font-bold">
+            Personal AI Chatbot
+          </h1>
 
           {selectedConversation ? (
             <>

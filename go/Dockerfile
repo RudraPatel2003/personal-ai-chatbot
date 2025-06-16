@@ -19,11 +19,11 @@ RUN apk add --no-cache git
 
 RUN go get -d -v ./... 
 
-RUN go build -o /go/bin/app -v ./...
+RUN go build -o /go/bin/app -v cmd/server/main.go
 
 # final stage
 FROM alpine:latest as production
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates curl
 
 COPY --from=builder /go/bin/app /app
 

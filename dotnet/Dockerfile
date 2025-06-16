@@ -22,10 +22,12 @@ CMD ["dotnet", "watch"]
 # build for production
 FROM base AS build
 
-RUN dotnet publish -c Release -p /app/publish
+RUN dotnet publish -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS production
 
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "dotnet.dll"]
+RUN apt-get update && apt-get install -y curl
+
+ENTRYPOINT ["dotnet", "dotnet.dll", "--urls", "http://+:5032"]

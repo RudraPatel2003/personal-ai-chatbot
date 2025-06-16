@@ -35,11 +35,11 @@ export default function LogViewer(): JSX.Element {
     });
 
   return (
-    <div className="flex h-screen bg-neutral-900">
-      <main className="flex flex-1 flex-col">
-        <div className="mx-auto flex h-full w-[90%] flex-col p-4 lg:w-[60%]">
+    <div className="h-screen w-screen bg-neutral-900">
+      <main className="mx-auto flex h-screen w-[min(90%,1000px)] flex-col items-center justify-center bg-neutral-900">
+        <div className="flex h-full flex-col p-4">
           <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">LocalGPT</h1>
+            <h1 className="text-2xl font-bold">Personal AI Chatbot</h1>
             <Link href="/">
               <Button
                 variant="outline"
@@ -77,7 +77,7 @@ export default function LogViewer(): JSX.Element {
                   <div key={i} className="space-y-4">
                     {page.data.map((log) => (
                       <Card key={log.id} className="bg-neutral-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardHeader className="flex flex-col space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium text-white">
                             {log.title}
                           </CardTitle>

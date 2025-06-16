@@ -2,7 +2,6 @@ import { JSX } from "react";
 
 import { Message } from "@/types";
 
-import { LoadingMessage } from "./loading-message";
 import MarkdownMessage from "./markdown-message";
 import { TypingMessage } from "./typing-message";
 
@@ -52,7 +51,6 @@ export default function MessageList({
           {getMessageView(message, messages, index, isLoading)}
         </div>
       ))}
-      {isLoading && <LoadingMessage />}
       <div ref={messagesEndReference} />
     </div>
   );

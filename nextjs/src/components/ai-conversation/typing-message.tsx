@@ -1,4 +1,5 @@
 import { JSX, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 import MarkdownMessage from "./markdown-message";
 
@@ -24,5 +25,12 @@ export function TypingMessage({ content }: TypingMessageProps): JSX.Element {
     return undefined;
   }, [content, currentIndex]);
 
-  return <MarkdownMessage content={displayedContent} />;
+  return (
+    <div className="flex items-center gap-2">
+      <MarkdownMessage content={displayedContent} />
+      {currentIndex < content.length && (
+        <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+      )}
+    </div>
+  );
 }

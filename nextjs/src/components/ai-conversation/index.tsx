@@ -82,6 +82,7 @@ export default function AiConversation(): JSX.Element {
         isLoadingConversations={isLoadingConversations}
         systemPrompt={systemPrompt}
         onEditSystemPrompt={setSystemPrompt}
+        isLoading={isLoading}
       />
 
       <main className="flex flex-1 flex-col md:pl-64">

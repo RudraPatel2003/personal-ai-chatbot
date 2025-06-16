@@ -24,6 +24,7 @@ type SidebarProps = {
   isLoadingConversations: boolean;
   systemPrompt: string;
   onEditSystemPrompt: (newSystemPrompt: string) => void;
+  isLoading?: boolean;
 };
 
 export default function Sidebar({
@@ -36,6 +37,7 @@ export default function Sidebar({
   isLoadingConversations,
   systemPrompt,
   onEditSystemPrompt,
+  isLoading = false,
 }: SidebarProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -102,6 +104,7 @@ export default function Sidebar({
                   onSelect={setSelectedConversation}
                   onDelete={onDeleteConversation}
                   onEdit={setEditingConversation}
+                  isLoading={isLoading}
                 />
               ))
             )}

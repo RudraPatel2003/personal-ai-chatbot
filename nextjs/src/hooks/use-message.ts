@@ -15,19 +15,8 @@ export const DEFAULT_SYSTEM_PROMPT = `You are a versatile and intelligent AI ass
 - Adapt your communication style to match the user's needs
 - Break down complex topics into clear, digestible explanations
 - Offer practical solutions and actionable advice
-- Write clean, efficient, and well-documented code when requested
 - Use markdown formatting to enhance readability
-- Include relevant code examples and explanations
 - Maintain a helpful and professional tone
-- Admit when you're unsure and suggest alternative approaches
-- Focus on best practices and modern development standards
-
-When coding:
-- Write production-ready code with proper error handling
-- Include helpful comments and documentation
-- Consider edge cases and potential issues
-- Suggest optimizations and improvements
-- Follow language-specific conventions and idioms
 
 Your goal is to be a reliable partner in problem-solving, learning, and development.`;
 
@@ -48,6 +37,7 @@ export function useMessage(
     SYSTEM_PROMPT_KEY,
     DEFAULT_SYSTEM_PROMPT,
   );
+  const [isTyping, setIsTyping] = useState(false);
 
   const { addMessage } = useConversation();
 
@@ -56,149 +46,154 @@ export function useMessage(
     setMessages(conversation?.messages ?? []);
   }, [conversation]);
 
-  const { mutateAsync: sendMessage, isPending: isLoading } = useMutation({
-    mutationFn: async (content: string) => {
-      if (!content.trim() || !conversation) {
-        return;
-      }
+  const { mutateAsync: sendMessage, isPending: isMutationLoading } =
+    useMutation({
+      mutationFn: async (content: string) => {
+        if (!content.trim() || !conversation) {
+          return;
+        }
 
-      // Add user message
-      const userMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "user",
-        content: content.trim(),
-        createdAt: new Date().toISOString(),
-      };
+        // Add user message
+        const userMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "user",
+          content: content.trim(),
+          createdAt: new Date().toISOString(),
+        };
 
-      // Add user message to conversation first
-      const userMessageInDatabase = await addMessage({
-        conversationId: conversation.id,
-        role: "user",
-        content: userMessage.content,
-        createdAt: userMessage.createdAt,
-      });
-
-      // Update local messages with the database version
-      setMessages((previous) => [...previous, userMessageInDatabase]);
-
-      try {
-        const responseBodyReader = await messagesApi.postMessage(
-          messages,
-          userMessageInDatabase,
-          systemPrompt,
-        );
+        // Add user message to conversation first
+        const userMessageInDatabase = await addMessage({
+          conversationId: conversation.id,
+          role: "user",
+          content: userMessage.content,
+          createdAt: userMessage.createdAt,
+        });
 
         // Create assistant message placeholder
         const assistantMessageUuid = crypto.randomUUID();
-        let content = "";
+        let aiContent = "";
 
         const assistantMessage: Message = {
           id: assistantMessageUuid,
           role: "assistant",
-          content,
+          content: aiContent,
           createdAt: new Date().toISOString(),
         };
 
-        // Add initial empty assistant message
-        setMessages((previous) => [...previous, assistantMessage]);
+        // Add initial empty assistant message and set typing state
+        setMessages((previous) => [
+          ...previous,
+          userMessageInDatabase,
+          assistantMessage,
+        ]);
+        setIsTyping(true);
 
-        const decoder = new TextDecoder();
+        try {
+          const responseBodyReader = await messagesApi.postMessage(
+            messages,
+            userMessageInDatabase,
+            systemPrompt,
+          );
 
-        while (true) {
-          const { done, value } = await responseBodyReader.read();
+          const decoder = new TextDecoder();
 
-          if (done) {
-            break;
+          while (true) {
+            const { done, value } = await responseBodyReader.read();
+
+            if (done) {
+              break;
+            }
+
+            const chunk = decoder.decode(value);
+            aiContent += chunk;
+
+            // Update the assistant's message with the new chunk
+            setMessages((previous) =>
+              previous.map((message) =>
+                message.id === assistantMessageUuid
+                  ? { ...message, content: aiContent }
+                  : message,
+              ),
+            );
           }
 
-          const chunk = decoder.decode(value);
-          content += chunk;
+          // After the AI message is complete, add it to the conversation
+          const assistantMessageInDatabase = await addMessage({
+            conversationId: conversation.id,
+            role: "assistant",
+            content: aiContent,
+            createdAt: assistantMessage.createdAt,
+          });
 
-          // Update the assistant's message with the new chunk
+          // Update the conversation in the conversations array
+          setConversations((previous) =>
+            previous.map((conv) =>
+              conv.id === conversation.id
+                ? {
+                    ...conv,
+                    messages: [
+                      ...conv.messages,
+                      userMessageInDatabase,
+                      assistantMessageInDatabase,
+                    ],
+                  }
+                : conv,
+            ),
+          );
+
+          // Update local messages with the final database version
           setMessages((previous) =>
             previous.map((message) =>
               message.id === assistantMessageUuid
-                ? { ...message, content }
+                ? assistantMessageInDatabase
                 : message,
             ),
           );
+        } catch (error) {
+          console.error("Error:", error);
+
+          const errorMessage: Message = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: "Sorry, there was an error processing your request.",
+            createdAt: new Date().toISOString(),
+          };
+
+          // Add error message to conversation
+          const errorMessageInDatabase = await addMessage({
+            conversationId: conversation.id,
+            role: "assistant",
+            content: errorMessage.content,
+            createdAt: errorMessage.createdAt,
+          });
+
+          // Update local messages with the error message
+          setMessages((previous) => [...previous, errorMessageInDatabase]);
+
+          // Update the conversation in the conversations array
+          setConversations((previous) =>
+            previous.map((conv) =>
+              conv.id === conversation.id
+                ? {
+                    ...conv,
+                    messages: [
+                      ...conv.messages,
+                      userMessageInDatabase,
+                      errorMessageInDatabase,
+                    ],
+                  }
+                : conv,
+            ),
+          );
+        } finally {
+          setIsTyping(false);
         }
-
-        // After the AI message is complete, add it to the conversation
-        const assistantMessageInDatabase = await addMessage({
-          conversationId: conversation.id,
-          role: "assistant",
-          content,
-          createdAt: assistantMessage.createdAt,
-        });
-
-        // Update the conversation in the conversations array
-        setConversations((previous) =>
-          previous.map((conv) =>
-            conv.id === conversation.id
-              ? {
-                  ...conv,
-                  messages: [
-                    ...conv.messages,
-                    userMessageInDatabase,
-                    assistantMessageInDatabase,
-                  ],
-                }
-              : conv,
-          ),
-        );
-
-        // Update local messages with the final database version
-        setMessages((previous) =>
-          previous.map((message) =>
-            message.id === assistantMessageUuid
-              ? assistantMessageInDatabase
-              : message,
-          ),
-        );
-      } catch (error) {
-        console.error("Error:", error);
-
-        const errorMessage: Message = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "Sorry, there was an error processing your request.",
-          createdAt: new Date().toISOString(),
-        };
-
-        // Add error message to conversation
-        const errorMessageInDatabase = await addMessage({
-          conversationId: conversation.id,
-          role: "assistant",
-          content: errorMessage.content,
-          createdAt: errorMessage.createdAt,
-        });
-
-        // Update local messages with the error message
-        setMessages((previous) => [...previous, errorMessageInDatabase]);
-
-        // Update the conversation in the conversations array
-        setConversations((previous) =>
-          previous.map((conv) =>
-            conv.id === conversation.id
-              ? {
-                  ...conv,
-                  messages: [
-                    ...conv.messages,
-                    userMessageInDatabase,
-                    errorMessageInDatabase,
-                  ],
-                }
-              : conv,
-          ),
-        );
-      }
-    },
-  });
+      },
+    });
 
   return {
     messages,
-    isLoading,
+    isLoading: isMutationLoading || isTyping,
     sendMessage,
     systemPrompt,
     setSystemPrompt,

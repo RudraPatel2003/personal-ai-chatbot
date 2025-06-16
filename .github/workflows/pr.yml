@@ -49,6 +49,7 @@ jobs:
         with:
           node-version: "lts/iron"
           cache: "pnpm"
+          cache-dependency-path: nextjs/pnpm-lock.yaml
 
       - name: Install dependencies
         working-directory: nextjs

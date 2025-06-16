@@ -33,14 +33,14 @@ jobs:
 
   nextjs-check:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nextjs
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-
-      - name: Go into nextjs directory
-        run: cd nextjs
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -61,14 +61,14 @@ jobs:
 
   go-check:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-
-      - name: Go into go directory
-        run: cd go
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -82,14 +82,14 @@ jobs:
 
   dotnet-check:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dotnet
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-
-      - name: Go into dotnet directory
-        run: cd dotnet
 
       - name: Run csharpier
         run: |

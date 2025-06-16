@@ -33,9 +33,6 @@ jobs:
 
   nextjs-check:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: nextjs
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -54,16 +51,15 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
+        working-directory: nextjs
         run: pnpm install --frozen-lockfile
 
       - name: Check that project builds
+        working-directory: nextjs
         run: pnpm run build
 
   go-check:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: go
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -79,22 +75,27 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.1
+          working-directory: go
 
   dotnet-check:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: dotnet
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
       - name: Run csharpier
+        working-directory: dotnet
         run: |
           dotnet tool restore
           dotnet csharpier check .
 
       - name: Run dotnet build
+        working-directory: dotnet
         run: dotnet build

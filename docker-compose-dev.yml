@@ -50,6 +50,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:80/api/dotnet/health"]
       interval: 10s
       timeout: 5s
+      start_period: 60s
     depends_on:
       dotnet:
         condition: service_healthy
@@ -87,7 +88,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 60s
 
   rabbitmq:
     image: rabbitmq:4.1.1-management-alpine
@@ -105,6 +106,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 60s
 
   go:
     container_name: go

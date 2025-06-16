@@ -1,4 +1,5 @@
-import { Menu, Plus, Settings } from "lucide-react";
+import { Menu, Newspaper, Plus, Settings } from "lucide-react";
+import Link from "next/link";
 import { JSX, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -107,7 +108,13 @@ export default function Sidebar({
           </div>
         </div>
 
-        <div className="border-sidebar-border border-t p-4">
+        <div className="border-sidebar-border flex flex-col gap-2 border-t p-4">
+          <Link href="/logs">
+            <Button variant="outline" className="w-full justify-start gap-2">
+              <Newspaper className="h-4 w-4" />
+              View Logs
+            </Button>
+          </Link>
           <Button
             variant="outline"
             className="w-full justify-start gap-2"

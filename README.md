@@ -29,6 +29,11 @@ Run a fully local, Docker-first personal AI chatbot that puts you in control of 
 
 To run the app in development mode, where code changes are hot reloaded, run `dev.sh` and go to `http://localhost:3000` in your browser.
 
+Notes:
+
+- To work on the frontend, you would find it helpful to open just the `nextjs` directory and have Node.js set up locally. After running `pnpm install`, your IDE should provide the proper support.
+- To work on the C# backend, you would find it helpful to open just the `dotnet` directory and have .NET set up locally. After running `dotnet restore`, your IDE should provide the proper support.
+
 ### Production Mode
 
 To run the app in production mode, run `prod.sh` and go to `http://localhost:3000` in your browser.

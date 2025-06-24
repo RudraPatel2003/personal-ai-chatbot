@@ -7,7 +7,7 @@ import { TypingMessage } from "./typing-message";
 
 type MessageListProps = {
   messages: Message[];
-  isLoading: boolean;
+  isChatting: boolean;
   messagesEndReference: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -15,12 +15,12 @@ function getMessageView(
   message: Message,
   messages: Message[],
   index: number,
-  isLoading: boolean,
+  isChatting: boolean,
 ): JSX.Element {
   if (
     message.role === "assistant" &&
     index === messages.length - 1 &&
-    isLoading
+    isChatting
   ) {
     return <TypingMessage content={message.content} />;
   }
@@ -34,7 +34,7 @@ function getMessageView(
 
 export default function MessageList({
   messages,
-  isLoading,
+  isChatting,
   messagesEndReference,
 }: MessageListProps): JSX.Element {
   return (
@@ -48,7 +48,7 @@ export default function MessageList({
               : "bg-neutral-700"
           } max-w-[90%] lg:max-w-[60%]`}
         >
-          {getMessageView(message, messages, index, isLoading)}
+          {getMessageView(message, messages, index, isChatting)}
         </div>
       ))}
       <div ref={messagesEndReference} />

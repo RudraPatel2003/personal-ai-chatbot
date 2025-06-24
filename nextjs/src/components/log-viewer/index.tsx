@@ -1,34 +1,20 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import dayjs from "dayjs";
 import Link from "next/link";
 import { JSX } from "react";
 
+import { LogResponse, logsApi } from "@/api/logs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Log } from "@/types/log";
 
-type LogResponse = {
-  data: Log[];
-  nextCursor: number;
-};
-
-async function fetchLogs(cursor = 0): Promise<LogResponse> {
-  const response = await fetch(
-    `http://localhost:80/api/go/logs?cursor=${cursor}`,
-  );
-  if (!response.ok) {
-    throw new Error("Failed to fetch logs");
-  }
-  return response.json();
-}
+import LogCard from "./log-card";
 
 export default function LogViewer(): JSX.Element {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<LogResponse>({
       queryKey: ["logs"],
-      queryFn: ({ pageParam }) => fetchLogs(pageParam as number),
+      queryFn: ({ pageParam }) => logsApi.findAll(pageParam as number),
       getNextPageParam: (lastPage) =>
         lastPage.nextCursor === 0 ? undefined : lastPage.nextCursor,
       initialPageParam: 0,
@@ -37,7 +23,7 @@ export default function LogViewer(): JSX.Element {
   return (
     <div className="h-screen w-screen bg-neutral-900">
       <main className="mx-auto flex h-screen w-[min(90%,1000px)] flex-col items-center justify-center bg-neutral-900">
-        <div className="flex h-full flex-col p-4">
+        <div className="flex h-full w-full flex-col p-4">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold">Personal AI Chatbot</h1>
             <Link href="/">
@@ -54,9 +40,17 @@ export default function LogViewer(): JSX.Element {
             <div className="space-y-4">
               {status === "error" && (
                 <Card className="bg-neutral-800">
+                  <CardHeader className="flex flex-col space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-white">
+                      Error
+                    </CardTitle>
+                    <div className="text-muted-foreground text-xs">
+                      Failed to load logs
+                    </div>
+                  </CardHeader>
                   <CardContent>
-                    <div className="text-muted-foreground text-center">
-                      Error loading logs
+                    <div className="text-muted-foreground overflow-x-auto rounded-md bg-neutral-900 p-4 text-sm">
+                      Error loading logs. Please try refreshing the page.
                     </div>
                   </CardContent>
                 </Card>
@@ -64,9 +58,17 @@ export default function LogViewer(): JSX.Element {
 
               {status === "pending" && (
                 <Card className="bg-neutral-800">
+                  <CardHeader className="flex flex-col space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-white">
+                      Loading
+                    </CardTitle>
+                    <div className="text-muted-foreground text-xs">
+                      Fetching logs
+                    </div>
+                  </CardHeader>
                   <CardContent>
-                    <div className="text-muted-foreground text-center">
-                      Loading...
+                    <div className="flex items-center justify-center overflow-x-auto rounded-md bg-neutral-900 p-4 text-sm">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-600 border-t-white"></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -76,27 +78,7 @@ export default function LogViewer(): JSX.Element {
                 data.pages.map((page, i) => (
                   <div key={i} className="space-y-4">
                     {page.data.map((log) => (
-                      <Card key={log.id} className="bg-neutral-800">
-                        <CardHeader className="flex flex-col space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-white">
-                            {log.title}
-                          </CardTitle>
-                          <div className="text-muted-foreground text-xs">
-                            {dayjs(log.createdAt).format("MMM D, YYYY h:mm A")}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <pre className="text-muted-foreground overflow-x-auto rounded-md bg-neutral-900 p-4 text-sm whitespace-pre-wrap">
-                            {log.description
-                              ? JSON.stringify(
-                                  JSON.parse(log.description),
-                                  undefined,
-                                  2,
-                                )
-                              : "No description provided"}
-                          </pre>
-                        </CardContent>
-                      </Card>
+                      <LogCard key={log.id} log={log} />
                     ))}
                   </div>
                 ))}

@@ -21,29 +21,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { DEFAULT_SYSTEM_PROMPT } from "@/hooks/use-message";
-
-const TEACHER_SYSTEM_PROMPT = `You are a knowledgeable teacher who guides learning through:
-- Clear explanations and examples
-- Breaking down complex topics
-- Asking thought-provoking questions
-- Providing constructive feedback
-- Sharing relevant resources
-- Spell things correctly
-- Use markdown formatting to enhance readability
-
-Focus on helping users understand concepts and develop problem-solving skills.`;
-
-const COACH_SYSTEM_PROMPT = `You are a motivational coach who:
-- Provides encouragement and positive reinforcement
-- Helps set and achieve goals
-- Offers practical advice and strategies
-- Celebrates progress and achievements
-- Builds confidence and resilience
-- Spell things correctly
-- Use markdown formatting to enhance readability
-
-Your goal is to inspire and support users in their journey.`;
+import { useSystemPromptStore } from "@/hooks/use-system-prompt-store";
+import {
+  COACH_SYSTEM_PROMPT,
+  DEFAULT_SYSTEM_PROMPT,
+  TEACHER_SYSTEM_PROMPT,
+} from "@/utils/constants/system-prompts";
 
 const formSchema = z.object({
   systemPrompt: z.string().min(1, "System prompt is required"),
@@ -56,17 +39,13 @@ type Persona = "default" | "teacher" | "coach" | "custom";
 type EditSystemPromptFormProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (systemPrompt: string) => void;
-  systemPrompt: string;
 };
 
 export default function EditSystemPromptForm({
   isOpen,
   onClose,
-  onSubmit,
-  systemPrompt,
 }: EditSystemPromptFormProps): JSX.Element {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { systemPrompt, setSystemPrompt } = useSystemPromptStore();
   const [selectedPersona, setSelectedPersona] = useState<Persona>(() => {
     if (systemPrompt === DEFAULT_SYSTEM_PROMPT) {
       return "default";
@@ -88,15 +67,9 @@ export default function EditSystemPromptForm({
   });
 
   const handleSubmit = (values: FormValues): void => {
-    setIsSubmitting(true);
-
-    try {
-      onSubmit(values.systemPrompt.trim());
-      form.reset({ systemPrompt: values.systemPrompt.trim() });
-      onClose();
-    } finally {
-      setIsSubmitting(false);
-    }
+    setSystemPrompt(values.systemPrompt.trim());
+    form.reset({ systemPrompt: values.systemPrompt.trim() });
+    onClose();
   };
 
   const handlePersonaSelect = (persona: Persona): void => {
@@ -216,19 +189,11 @@ export default function EditSystemPromptForm({
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="ghost" onClick={onClose}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !form.formState.isDirty}
-              >
-                {isSubmitting ? "Saving..." : "Save"}
+              <Button type="submit" disabled={!form.formState.isDirty}>
+                Save
               </Button>
             </DialogFooter>
           </form>

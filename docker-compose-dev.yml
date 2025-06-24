@@ -13,7 +13,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 50 # it can take a long time to download the model
-      start_period: 60s
+      start_period: 120s
 
   dotnet:
     container_name: dotnet
@@ -30,7 +30,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 50
-      start_period: 60s
+      start_period: 120s
     depends_on:
       ollama:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:80/api/dotnet/health"]
       interval: 10s
       timeout: 5s
-      start_period: 60s
+      start_period: 120s
     depends_on:
       dotnet:
         condition: service_healthy
@@ -88,7 +88,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 120s
 
   rabbitmq:
     image: rabbitmq:4.1.1-management-alpine
@@ -106,7 +106,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 120s
 
   go:
     container_name: go
@@ -123,7 +123,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 120s
     depends_on:
       dotnet:
         condition: service_healthy

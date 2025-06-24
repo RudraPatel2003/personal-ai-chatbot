@@ -20,3 +20,9 @@ export type AddMessageRequest = {
   content: string;
   createdAt: string;
 };
+
+export type ChatRequest = {
+  conversationId: string;
+  systemPrompt: string;
+  userPrompt: string;
+};

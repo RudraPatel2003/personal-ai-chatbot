@@ -1,9 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { JSX, useState } from "react";
+import { JSX } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
+import { useConversation } from "@/hooks/use-conversation";
+import { Conversation, UpdateConversationRequest } from "@/types";
+
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,15 +14,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "../ui/form";
+import { Input } from "../ui/input";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -27,37 +30,45 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-type CreateConversationFormProps = {
+type EditConversationFormProps = {
+  conversation: Conversation;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (name: string) => Promise<void>;
 };
 
-export default function CreateConversationForm({
+export default function EditConversationForm({
+  conversation,
   isOpen,
   onClose,
-  onSubmit,
-}: CreateConversationFormProps): JSX.Element {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+}: EditConversationFormProps): JSX.Element {
+  const { updateConversation, isUpdatingConversation } = useConversation();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      name: conversation.name,
     },
   });
 
   const handleSubmit = async (values: FormValues): Promise<void> => {
-    setIsSubmitting(true);
-
     try {
-      await onSubmit(values.name.trim());
+      const updateConversationRequest: UpdateConversationRequest = {
+        conversationId: conversation.id,
+        name: values.name.trim(),
+      };
 
-      form.reset();
+      const updatedConversation = await updateConversation(
+        updateConversationRequest,
+      );
+
+      form.reset({
+        name: updatedConversation.name,
+      });
 
       onClose();
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error(error);
+      form.reset();
     }
   };
 
@@ -67,9 +78,9 @@ export default function CreateConversationForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <DialogHeader>
-              <DialogTitle>Create New Conversation</DialogTitle>
+              <DialogTitle>Edit Conversation</DialogTitle>
               <DialogDescription>
-                Enter a name for your new conversation.
+                Update the name of your conversation.
               </DialogDescription>
             </DialogHeader>
 
@@ -97,12 +108,12 @@ export default function CreateConversationForm({
                 type="button"
                 variant="ghost"
                 onClick={onClose}
-                disabled={isSubmitting}
+                disabled={isUpdatingConversation}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create"}
+              <Button type="submit" disabled={isUpdatingConversation}>
+                {isUpdatingConversation ? "Saving..." : "Save"}
               </Button>
             </DialogFooter>
           </form>

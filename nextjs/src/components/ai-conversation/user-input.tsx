@@ -1,27 +1,38 @@
 import { JSX, useState } from "react";
 
+import { useSystemPromptStore } from "@/hooks/use-system-prompt-store";
+import { ChatRequest } from "@/types";
+
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
 type UserInputProps = {
-  sendMessage: (message: string) => Promise<void>;
-  isLoading: boolean;
+  conversationId: string;
+  chat: (request: ChatRequest) => Promise<void>;
+  isChatting: boolean;
 };
 
 export default function UserInput({
-  sendMessage,
-  isLoading,
+  conversationId,
+  chat,
+  isChatting,
 }: UserInputProps): JSX.Element {
+  const { systemPrompt } = useSystemPromptStore();
+
   const [input, setInput] = useState("");
 
   const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
 
-    if (!input.trim() || isLoading) {
+    if (!input.trim() || isChatting) {
       return;
     }
 
-    await sendMessage(input);
+    await chat({
+      conversationId,
+      userPrompt: input,
+      systemPrompt: systemPrompt,
+    });
 
     setInput("");
   };
@@ -32,10 +43,15 @@ export default function UserInput({
         onChange={(event) => setInput(event.target.value)}
         placeholder="Type your message..."
         className="flex-1"
-        disabled={isLoading}
+        disabled={isChatting}
       />
-      <Button type="submit" disabled={isLoading} variant="default">
-        {isLoading ? "Sending..." : "Send"}
+      <Button
+        type="submit"
+        disabled={isChatting}
+        variant="default"
+        className="cursor-pointer"
+      >
+        {isChatting ? "Sending..." : "Send"}
       </Button>
     </form>
   );

@@ -1,8 +1,7 @@
 import {
-  AddMessageRequest,
+  ChatRequest,
   Conversation,
   CreateConversationRequest,
-  Message,
   UpdateConversationRequest,
 } from "@/types";
 
@@ -64,9 +63,11 @@ export const conversationApi = {
     return response.json();
   },
 
-  async addMessage(request: AddMessageRequest): Promise<Message> {
+  chat: async (
+    request: ChatRequest,
+  ): Promise<ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>>> => {
     const response = await fetch(
-      `${API_BASE_URL}/dotnet/conversations/${request.conversationId}/messages`,
+      `${API_BASE_URL}/dotnet/conversations/${request.conversationId}/chat`,
       {
         method: "POST",
         headers: {
@@ -77,10 +78,14 @@ export const conversationApi = {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to add message");
+      throw new Error("Failed to post message");
     }
 
-    return response.json();
+    if (!response.body) {
+      throw new Error("No response body");
+    }
+
+    return response.body.getReader();
   },
 
   async delete(id: string): Promise<void> {

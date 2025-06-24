@@ -48,7 +48,7 @@ func GetLogs(cursor int, limit int) ([]models.LogMessage, int, error) {
 	}
 	defer rows.Close()
 
-	var logs []models.LogMessage = []models.LogMessage{}
+	logs := []models.LogMessage{}
 
 	for rows.Next() {
 		var log models.LogMessage

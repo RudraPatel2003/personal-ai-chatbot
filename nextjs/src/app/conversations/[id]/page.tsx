@@ -5,15 +5,15 @@ import AiConversation from "@/components/ai-conversation";
 export const dynamic = "force-dynamic";
 
 type ConversationPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export default function ConversationPage({
+export default async function ConversationPage({
   params,
-}: ConversationPageProps): JSX.Element {
-  const { id } = params;
+}: ConversationPageProps): Promise<JSX.Element> {
+  const { id } = await params;
 
   return <AiConversation conversationId={id} />;
 }

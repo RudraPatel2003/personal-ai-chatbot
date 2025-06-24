@@ -29,7 +29,7 @@ export default function LogViewer(): JSX.Element {
             <Link href="/">
               <Button
                 variant="outline"
-                className="text-neutral-400 hover:text-white"
+                className="cursor-pointer text-neutral-400 hover:text-white"
               >
                 Back to Chat
               </Button>
@@ -74,14 +74,26 @@ export default function LogViewer(): JSX.Element {
                 </Card>
               )}
 
-              {status === "success" &&
+              {status === "success" && data.pages.length > 0 ? (
                 data.pages.map((page, i) => (
                   <div key={i} className="space-y-4">
                     {page.data.map((log) => (
                       <LogCard key={log.id} log={log} />
                     ))}
                   </div>
-                ))}
+                ))
+              ) : (
+                <Card className="bg-neutral-800">
+                  <CardHeader className="flex flex-col space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-white">
+                      No logs found
+                    </CardTitle>
+                    <div className="text-muted-foreground text-xs">
+                      There are currently no logs to display.
+                    </div>
+                  </CardHeader>
+                </Card>
+              )}
             </div>
           </div>
 
@@ -91,7 +103,7 @@ export default function LogViewer(): JSX.Element {
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
                 variant="outline"
-                className="text-neutral-400 hover:text-white"
+                className="cursor-pointer text-neutral-400 hover:text-white"
               >
                 {isFetchingNextPage ? "Loading..." : "Load More"}
               </Button>

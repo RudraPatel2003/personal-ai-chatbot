@@ -78,7 +78,7 @@ export function useConversation(
   const { mutateAsync: chat, isPending: isChatting } = useMutation({
     mutationFn: async (request: ChatRequest) => {
       if (!selectedConversationId) {
-        return;
+        throw new Error("No conversation selected");
       }
 
       // Optimistically add user and assistant messages to local state
@@ -108,20 +108,38 @@ export function useConversation(
         },
       );
 
-      const reader = await conversationApi.chat(request);
-
       const decoder = new TextDecoder();
+      try {
+        const reader = await conversationApi.chat(request);
 
-      while (true) {
-        const { done, value } = await reader.read();
+        while (true) {
+          const { done, value } = await reader.read();
 
-        if (done) {
-          break;
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+
+          // Update the assistant message content with the new chunk
+          queryClient.setQueryData(
+            ["conversations", selectedConversationId],
+            (old: Conversation) => {
+              return {
+                ...old,
+                messages: old.messages.map((message) =>
+                  message.id === assistantMessageUuid
+                    ? { ...message, content: message.content + chunk }
+                    : message,
+                ),
+              };
+            },
+          );
         }
+      } catch (error) {
+        console.error("Error during streaming:", error);
 
-        const chunk = decoder.decode(value);
-        assistantMessage.content += chunk;
-
+        // Update the assistant message to show error
         queryClient.setQueryData(
           ["conversations", selectedConversationId],
           (old: Conversation) => {
@@ -129,7 +147,12 @@ export function useConversation(
               ...old,
               messages: old.messages.map((message) =>
                 message.id === assistantMessageUuid
-                  ? { ...message, content: assistantMessage.content }
+                  ? {
+                      ...message,
+                      content:
+                        message.content +
+                        "\n\n[Error: Failed to complete response. Please try again.]",
+                    }
                   : message,
               ),
             };
@@ -138,6 +161,14 @@ export function useConversation(
       }
     },
     onSuccess: async () => {
+      // Invalidate the conversation to ensure we have the latest data
+      await queryClient.invalidateQueries({
+        queryKey: ["conversations", selectedConversationId],
+      });
+    },
+    onError: async (error) => {
+      console.error("Chat mutation error:", error);
+      // Optionally invalidate to refresh the conversation state
       await queryClient.invalidateQueries({
         queryKey: ["conversations", selectedConversationId],
       });

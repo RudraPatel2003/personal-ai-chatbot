@@ -2,7 +2,7 @@ import { JSX, useEffect, useState } from "react";
 
 import MarkdownMessage from "./markdown-message";
 
-const MESSAGE_UPDATE_SPEED_IN_MS = 3;
+const MESSAGE_UPDATE_SPEED_IN_MS = 5;
 
 type TypingMessageProps = {
   content: string;
@@ -27,6 +27,7 @@ export function TypingMessage({ content }: TypingMessageProps): JSX.Element {
   return (
     <div className="relative">
       <MarkdownMessage content={displayedContent} />
+      <span className="ml-1 inline-block h-4 w-2 animate-pulse bg-neutral-400" />
     </div>
   );
 }
